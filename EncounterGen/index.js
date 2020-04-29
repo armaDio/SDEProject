@@ -52,7 +52,7 @@ app.get("/", function (req, res) {
         avgPlayerLevel += parseInt(level);
       });
       avgPlayerLevel = Math.floor(avgPlayerLevel/players.length);
-      fetchMonsters(avgPlayerLevel).then(function(monsterListArrayRaw){
+      fetchMonsters(avgPlayerLevel, 7, difficulty).then(function(monsterListArrayRaw){
         console.log("Requests completed");
         var monsterListByCR = {};
         var crList = [];
@@ -78,36 +78,60 @@ app.get("/", function (req, res) {
             monsterCount = 0;
           }
         } while(monsterCount < 1);
-        var currentPlayerExp = adjustedPlayerExp;
-        var currentMonsterCount = 0;
+        var currentMonsterExp = 0;
         var monsterCountByCr = {};
         console.log(crList);
         console.log(totalPlayerExp + " " + avgPlayerLevel);
-        console.log(currentPlayerExp);
-        console.log(monsterCount);
+        console.log(adjustedPlayerExp + " " + monsterCount);
         for(var i = 0; i<crList.length; i++) {
           monsterCountByCr[""+crList[i]] = 0;
         }
-        while(currentMonsterCount < monsterCount) {
-          for(var i = 0; i<crList.length; i++) {
-            var max = 0;
-            while(max+currentMonsterCount < monsterCount && Math.floor((currentPlayerExp - ((max+1) * expTable[crList[i]])) / expTable[crList[crList.length-1]] >= monsterCount - currentMonsterCount)) {
-              max++;
-            }
-            if(max > 0) {
-              var count = Math.floor(Math.random() * (max+1));
-              monsterCountByCr[""+crList[i]] += count;
-              currentPlayerExp -= count * expTable[crList[i]];
-              currentMonsterCount += count;
-              console.log("CR "+crList[i]+" Max = "+max+" Count = +"+count+" exp = "+currentPlayerExp);
-            }
+        for(var i = 0; i<monsterCount; i++) {
+          var avgExpPerMonster = Math.floor(adjustedPlayerExp / monsterCount);
+          var threshold = adjustedPlayerExp * 0.05;
+          console.log("Monster " + (i+1) + " difference = " + Math.abs(currentMonsterExp - avgExpPerMonster * i) + " threshold = " + threshold);
+          if(Math.abs(currentMonsterExp - avgExpPerMonster * i) < threshold && i != monsterCount-1) {
+            var selectedCr = 0;
+            do {
+              selectedCr = Math.floor(Math.random() * crList.length);
+            } while(expTable[crList[selectedCr]] + expTable[crList[crList.length-1]] * (monsterCount - (i+1)) > adjustedPlayerExp + threshold);
+            monsterCountByCr[crList[selectedCr]]++;
+            currentMonsterExp += expTable[crList[selectedCr]];
+            console.log("Randomly selected " + expTable[crList[selectedCr]]);
+          } else {
+            var minIndex = 0;
+            crList.forEach(function(cr, index){
+              if(Math.abs((currentMonsterExp + expTable[cr]) - avgExpPerMonster * (i+1)) < Math.abs((currentMonsterExp + expTable[crList[minIndex]]) - avgExpPerMonster * (i+1))) {
+                minIndex = index;
+              }
+            });
+            monsterCountByCr[crList[minIndex]]++;
+            currentMonsterExp += expTable[crList[minIndex]];
+            console.log("Forced selection " + expTable[crList[minIndex]]);
           }
         }
         console.log(monsterCountByCr);
+        var encounterMonsters = [];
+        var responseCRList = {};
+        var sum = 0;
         for(var key of Object.keys(monsterCountByCr)) {
-          
+          sum += monsterCountByCr[key] * expTable[key];
+          if(monsterCountByCr[key] > 0) {
+            responseCRList[key] = monsterCountByCr[key];
+          }
+          for(var i = 0; i<monsterCountByCr[key]; i++) {
+            var randomIndex = Math.floor(Math.random() * monsterListByCR[key].length);
+            encounterMonsters.push(monsterListByCR[key][randomIndex]);
+          }
         }
-        res.send("Good request")
+        console.log(sum);
+        res.json({
+          difficulty: difficulty,
+          playerCount: players.length,
+          avgPartyLevel: avgPlayerLevel,
+          monstersCRList: responseCRList,
+          monsters: encounterMonsters
+        });
       });
     } else {
       res.statusCode = 400;
@@ -119,10 +143,20 @@ app.get("/", function (req, res) {
   }
 });
 
-function fetchMonsters(level) {
+function fetchMonsters(level, interval, difficulty) {
   return new Promise((resolve,reject) => {
+    var difficultyOffset = 0;
+    switch(difficulty) {
+      case("hard"): difficultyOffset = 1; 
+      break;
+      case("deadly"): difficultyOffset = 2;
+      break;
+      default: difficultyOffset = 0;
+      break;
+    }
+    var intervalValue = interval-difficultyOffset;
     var monsterCRLevels = []
-    for(var i = level; i>-3 && i>level-7; i--) {
+    for(var i = level+difficultyOffset; i>-3 && i>level-intervalValue; i--) {
       var cr = "";
       switch(i) {
         case 0: cr = "1/2";
@@ -133,7 +167,7 @@ function fetchMonsters(level) {
         break;
         default: cr = ""+i;
       }
-      monsterCRLevels[level-i] = cr;
+      monsterCRLevels[level-(i-difficultyOffset)] = cr;
     }
     var requestsArr = [];
     var dataArray = [];
