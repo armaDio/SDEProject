@@ -2,6 +2,7 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var fs = require("fs");
 var axios = require("axios");
+var htmlParser = require("htmlparser");
 var app = express();
 
 app.listen(3000, function () {
@@ -88,7 +89,7 @@ app.get("/", function (req, res) {
         }
         for(var i = 0; i<monsterCount; i++) {
           var avgExpPerMonster = Math.floor(adjustedPlayerExp / monsterCount);
-          var threshold = adjustedPlayerExp * 0.05;
+          var threshold = Math.floor(adjustedPlayerExp * 0.05);
           console.log("Monster " + (i+1) + " difference = " + Math.abs(currentMonsterExp - avgExpPerMonster * i) + " threshold = " + threshold);
           if(Math.abs(currentMonsterExp - avgExpPerMonster * i) < threshold && i != monsterCount-1) {
             var selectedCr = 0;
@@ -125,13 +126,42 @@ app.get("/", function (req, res) {
           }
         }
         console.log(sum);
-        res.json({
-          difficulty: difficulty,
-          playerCount: players.length,
-          avgPartyLevel: avgPlayerLevel,
-          monstersCRList: responseCRList,
-          monsters: encounterMonsters
+        fetchNames(encounterMonsters.length).then(function(names){
+          customMonsterList = [];
+          namesList = names.split(/\r?\n/);
+          console.log(namesList);
+          encounterMonsters.forEach(function(monster, index){
+            var newName = namesList[index]+" ("+monster.name+")";
+            var newMonster = {
+              name: newName,
+              size: monster.size,
+              type: monster.type,
+              alignment: monster.alignment,
+              armor_class: monster.armor_class,
+              hit_points: monster.hit_points,
+              hit_dice: monster.hit_dice,
+              speed: monster.speed,
+              stats: {
+                strength: monster.strength,
+                dexterity: monster.dexterity,
+                constitution: monster.constitution,
+                intelligence: monster.intelligence,
+                wisdom: monster.wisdom,
+                charisma: monster.charisma
+              },
+              challenge_rating: monster.challenge_rating
+            }
+            customMonsterList.push(newMonster);
+          });
+          res.json({
+            difficulty: difficulty,
+            playerCount: players.length,
+            avgPartyLevel: avgPlayerLevel,
+            monstersCRList: responseCRList,
+            monsters: customMonsterList
+          });
         });
+        
       });
     } else {
       res.statusCode = 400;
@@ -144,7 +174,7 @@ app.get("/", function (req, res) {
 });
 
 function fetchMonsters(level, interval, difficulty) {
-  return new Promise((resolve,reject) => {
+  return new Promise((resolve) => {
     var difficultyOffset = 0;
     switch(difficulty) {
       case("hard"): difficultyOffset = 1; 
@@ -180,6 +210,15 @@ function fetchMonsters(level, interval, difficulty) {
         dataArray[index] = response.data;
       })
       resolve(dataArray);
+    });
+  });
+}
+
+function fetchNames(count) {
+  return new Promise((resolve) => {
+    var url = "https://donjon.bin.sh/name/rpc-name.fcgi?type=Draconic+Male&n="+count;
+    axios.get(url).then(function(response){
+      resolve(response.data);
     });
   });
 }
