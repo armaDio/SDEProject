@@ -1,0 +1,97 @@
+{
+    "difficulty": "easy",
+    "playerCount": 4,
+    "avgPartyLevel": 4,
+    "monstersCRList": {
+        "1/2": 2,
+        "1/4": 2
+    },
+    "monsters": [
+        {
+            "name": "Mardita (Magma Mephit)",
+            "size": "Small",
+            "type": "elemental",
+            "alignment": "neutral evil",
+            "armor_class": 11,
+            "hit_points": 22,
+            "hit_dice": "5d6+5",
+            "speed": {
+                "walk": 30,
+                "fly": 30
+            },
+            "stats": {
+                "strength": 8,
+                "dexterity": 12,
+                "constitution": 12,
+                "intelligence": 7,
+                "wisdom": 10,
+                "charisma": 10
+            },
+            "challenge_rating": "1/2"
+        },
+        {
+            "name": "Murrabu (Chupacabra)",
+            "size": "Small",
+            "type": "monstrosity",
+            "alignment": "unaligned",
+            "armor_class": 13,
+            "hit_points": 36,
+            "hit_dice": "8d6+8",
+            "speed": {
+                "walk": 30
+            },
+            "stats": {
+                "strength": 16,
+                "dexterity": 15,
+                "constitution": 12,
+                "intelligence": 3,
+                "wisdom": 12,
+                "charisma": 6
+            },
+            "challenge_rating": "1/2"
+        },
+        {
+            "name": "Nabiuma (Giant Frog)",
+            "size": "Medium",
+            "type": "beast",
+            "alignment": "unaligned",
+            "armor_class": 11,
+            "hit_points": 18,
+            "hit_dice": "4d8",
+            "speed": {
+                "walk": 30,
+                "swim": 30
+            },
+            "stats": {
+                "strength": 12,
+                "dexterity": 13,
+                "constitution": 11,
+                "intelligence": 2,
+                "wisdom": 10,
+                "charisma": 3
+            },
+            "challenge_rating": "1/4"
+        },
+        {
+            "name": "Gezuu (Grimlock)",
+            "size": "Medium",
+            "type": "humanoid",
+            "alignment": "neutral evil",
+            "armor_class": 11,
+            "hit_points": 11,
+            "hit_dice": "2d8+2",
+            "speed": {
+                "walk": 30
+            },
+            "stats": {
+                "strength": 16,
+                "dexterity": 12,
+                "constitution": 12,
+                "intelligence": 9,
+                "wisdom": 8,
+                "charisma": 6
+            },
+            "challenge_rating": "1/4"
+        }
+    ]
+}
