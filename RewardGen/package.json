@@ -1,0 +1,21 @@
+{
+  "name": "EncounterGen",
+  "version": "1.0.0",
+  "description": "Encounter generator for d&d API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=7.6.0",
+    "npm": ">=4.1.2"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "express": "^4.17.1",
+    "htmlparser": "^1.7.7",
+    "htmlparser2": "^4.1.0",
+    "jsdom": "^16.2.2",
+    "node-html-parser": "^1.2.16"
+  }
+}
