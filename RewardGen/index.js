@@ -89,31 +89,51 @@ app.listen(3001, function () {
 app.use(bodyParser.json());
 
 app.get("/", function (req, res) {
+  var tortn = {};
   if(req.header("Content-Type") == "application/json") {
-    var monstersCRList = req.body.monstersCRList;
-    console.log(monstersCRList);
+    var monsters = req.body.monsters;
+    //console.log(monsters);
+    var rtnMonsters= [];var Loot_fetches= [];
+    getLootList().then(function(list){
+      monsters.forEach(monster => {
+        var rtnMonster ={};
+        rtnMonster.name = monster.name;
+        rtnMonster.challenge_rating = monster.challenge_rating;
+        //console.error(monster); 
+        
+        var XPreward = getXPreward(monster.challenge_rating);
+        rtnMonster.XPreward = XPreward;
 
-    var rewardsXP = [], rewardsLoot = [];
-    for(var attr in monstersCRList){
-      for (let i = 0; i < monstersCRList[attr]; i++) {
-        rewardsXP.push(getXPreward(attr));  
-        rewardsLoot.push(getLootReward(attr));
-      }
-    }
-    var totalXP = 0;
-    rewardsXP.forEach(element => {
-      totalXP = totalXP+element;
+        var randIdx = Math.floor(Math.random()*Math.floor(list.count));
+        
+        //getLootReward(monster.challenge_rating);
+        var lootpromise = getLootDetails(list.results[randIdx].url).then(function(item){
+          rtnMonster.LootReward = {money: getLootReward(monster.challenge_rating), items : item};
+          rtnMonsters.push(rtnMonster);
+          //console.error(rtnMonster);
+        });
+        Loot_fetches.push(lootpromise);
+      });
+      Promise.all(Loot_fetches).then((responseArray) => {
+        var totalXP = 0;
+          rtnMonsters.forEach(element => {
+            console.log(element.XPreward);
+            totalXP = totalXP+element.XPreward;
+          });
+          console.warn(totalXP);
+          //console.log(rtnMonsters);
+        res.statusCode = 200;
+        res.json({TotalXP: totalXP, rewards: rtnMonsters});
+      });
     });
-    res.statusCode = 200;
-    res.json({TotalXP: totalXP, XPrewards: rewardsXP,Loot_rewards: rewardsLoot})
   } else {
-    res.statusCode = 400;
-    res.json({status: 400, Description: "Bad Request", Details: "application/json expected"});
+      res.statusCode = 400;
+      res.json({status: 400, Description: "Bad Request", Details: "application/json expected"});
   }
 });
 
 function getXPreward(attr) {
-  console.log(expTable[attr]);
+  //console.log(expTable[attr]);
   return expTable[attr];
 }
 
@@ -129,7 +149,7 @@ function getLootReward(attr){
         reward["EP"] = eval(i04table[i]["EP"]);
         reward["GP"] = eval(i04table[i]["GP"]);
         reward["PP"] = eval(i04table[i]["PP"]);
-        console.log("roll: "+dice+" index: "+i );
+        //console.log("roll: "+dice+" index: "+i );
         break;
       }
       
@@ -142,7 +162,7 @@ function getLootReward(attr){
         reward["EP"] = eval(i510table[i]["EP"]);
         reward["GP"] = eval(i510table[i]["GP"]);
         reward["PP"] = eval(i510table[i]["PP"]);
-        console.log("roll: "+dice+" index: "+i );
+        //console.log("roll: "+dice+" index: "+i );
         break;
       }
       
@@ -155,7 +175,7 @@ function getLootReward(attr){
         reward["EP"] = eval(i1116table[i]["EP"]);
         reward["GP"] = eval(i1116table[i]["GP"]);
         reward["PP"] = eval(i1116table[i]["PP"]);
-        console.log("roll: "+dice+" index: "+i );
+        //console.log("roll: "+dice+" index: "+i );
         break;
       }
       
@@ -168,7 +188,7 @@ function getLootReward(attr){
         reward["EP"] = eval(i1116table[i]["EP"]);
         reward["GP"] = eval(i1116table[i]["GP"]);
         reward["PP"] = eval(i1116table[i]["PP"]);
-        console.log("roll: "+dice+" index: "+i );
+        //console.log("roll: "+dice+" index: "+i );
         break;
       }
       
@@ -177,14 +197,41 @@ function getLootReward(attr){
   return reward;
 }
 
+function getLootList(){
+  return new Promise((resolve) => {
+    var url = "https://www.dnd5eapi.co/api/equipment/";
+    axios.get(url).then(function(response){
+      resolve(response.data);
+      //console.log(response.data);
+    });
+  });
+
+}
+
+function getLootDetails(item){
+  return new Promise((resolve) => {
+    var url = "https://www.dnd5eapi.co"+item;
+    axios.get(url).then(function(response){
+      //console.error(response.data);
+      //console.error(url);
+      var data = [];
+      var chance = roll("1d100")
+      if(chance <35)
+        data.push(response.data);
+      resolve(data);
+    });
+  });
+
+}
+
 function roll(dice) {
   var tmp = dice.split("d");
   var tortn = 0;
-    console.log("Rolling "+dice)
+  //console.log("Rolling "+dice)
   for (let n = 0; n < tmp[0]; n++) {
     var val = Math.floor(Math.random()*Math.floor(tmp[1]))+1;
     tortn += val;
-    console.log("\t\t " + val)
+    //console.log("\t\t " + val)
   }
   return tortn;
 }
