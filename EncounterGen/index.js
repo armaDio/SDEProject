@@ -11,6 +11,35 @@ app.listen(3000, function () {
 
 app.use(bodyParser.json());
 
+var thresholdRaw = fs.readFileSync(__dirname+"/data/threshold.csv", "utf8");
+var expRaw = fs.readFileSync(__dirname+"/data/exp.csv", "utf8");
+var multRaw = fs.readFileSync(__dirname+"/data/multipliers.csv", "utf8");
+var tmplines = thresholdRaw.split(/\r?\n/);
+var thresholdTable = {};
+tmplines.forEach(function(line){
+  var tmpvals = line.split(/,/);
+  var level = tmpvals[0];
+  thresholdTable[level] = {};
+  thresholdTable[level]["easy"] = parseInt(tmpvals[1]);
+  thresholdTable[level]["medium"] = parseInt(tmpvals[2]);
+  thresholdTable[level]["hard"] = parseInt(tmpvals[3]);
+  thresholdTable[level]["deadly"] = parseInt(tmpvals[4]);
+});
+tmplines = expRaw.split(/\r?\n/);
+var expTable = {};
+tmplines.forEach(function(line){
+  var tmpvals = line.split(/,/);
+  var cr = tmpvals[0];
+  expTable[""+cr] = parseFloat(tmpvals[1]);
+});
+tmplines = multRaw.split(/\r?\n/);
+var multTable = {};
+tmplines.forEach(function(line){
+  var tmpvals = line.split(/,/);
+  var npcCount = tmpvals[0];
+  multTable[""+npcCount] = parseFloat(tmpvals[1]);
+});
+
 app.get("/", function (req, res) {
   if(req.header("Content-Type") == "application/json") {
     var players = req.body.players;
@@ -18,34 +47,6 @@ app.get("/", function (req, res) {
     if(Array.isArray(players) && players.length > 0 && difficulty != undefined) {
       console.log(difficulty);
       console.log(players);
-      var thresholdRaw = fs.readFileSync(__dirname+"/data/threshold.csv", "utf8");
-      var tmplines = thresholdRaw.split(/\r?\n/);
-      var thresholdTable = {};
-      tmplines.forEach(function(line){
-        var tmpvals = line.split(/,/);
-        var level = tmpvals[0];
-        thresholdTable[level] = {};
-        thresholdTable[level]["easy"] = parseInt(tmpvals[1]);
-        thresholdTable[level]["medium"] = parseInt(tmpvals[2]);
-        thresholdTable[level]["hard"] = parseInt(tmpvals[3]);
-        thresholdTable[level]["deadly"] = parseInt(tmpvals[4]);
-      });
-      var expRaw = fs.readFileSync(__dirname+"/data/exp.csv", "utf8");
-      tmplines = expRaw.split(/\r?\n/);
-      var expTable = {};
-      tmplines.forEach(function(line){
-        var tmpvals = line.split(/,/);
-        var cr = tmpvals[0];
-        expTable[""+cr] = parseFloat(tmpvals[1]);
-      });
-      var multRaw = fs.readFileSync(__dirname+"/data/multipliers.csv", "utf8");
-      tmplines = multRaw.split(/\r?\n/);
-      var multTable = {};
-      tmplines.forEach(function(line){
-        var tmpvals = line.split(/,/);
-        var npcCount = tmpvals[0];
-        multTable[""+npcCount] = parseFloat(tmpvals[1]);
-      });
       var totalPlayerExp = 0;
       var avgPlayerLevel = 0;
       players.forEach(function(level){
@@ -53,7 +54,7 @@ app.get("/", function (req, res) {
         avgPlayerLevel += parseInt(level);
       });
       avgPlayerLevel = Math.floor(avgPlayerLevel/players.length);
-      fetchMonsters(avgPlayerLevel, 7, difficulty).then(function(monsterListArrayRaw){
+      fetchMonsters(avgPlayerLevel, 12, difficulty).then(function(monsterListArrayRaw){
         console.log("Requests completed");
         var monsterListByCR = {};
         var crList = [];
@@ -87,22 +88,36 @@ app.get("/", function (req, res) {
         for(var i = 0; i<crList.length; i++) {
           monsterCountByCr[""+crList[i]] = 0;
         }
+        var avgExpPerMonster = Math.floor(adjustedPlayerExp / monsterCount);
+        var threshold = Math.floor(adjustedPlayerExp * 0.05);
         for(var i = 0; i<monsterCount; i++) {
-          var avgExpPerMonster = Math.floor(adjustedPlayerExp / monsterCount);
-          var threshold = Math.floor(adjustedPlayerExp * 0.05);
           console.log("Monster " + (i+1) + " difference = " + Math.abs(currentMonsterExp - avgExpPerMonster * i) + " threshold = " + threshold);
+          var crByChance = {}
+          var totDiff = 0;
           if(Math.abs(currentMonsterExp - avgExpPerMonster * i) < threshold && i != monsterCount-1) {
+            for(var j = 0; j<crList.length; j++) {
+              totDiff += Math.abs((currentMonsterExp + expTable[crList[j]]) - avgExpPerMonster * (i+1));
+              crByChance[""+totDiff] = crList[j];
+            }
             var selectedCr = 0;
             do {
-              selectedCr = Math.floor(Math.random() * crList.length);
-            } while(expTable[crList[selectedCr]] + expTable[crList[crList.length-1]] * (monsterCount - (i+1)) > adjustedPlayerExp + threshold);
+              var min = 0;
+              var randomVal = Math.floor(Math.random() * (totDiff+1));
+              for(var key of Object.keys(crByChance)) {
+                if(randomVal > min && randomVal <= parseInt(key)) {
+                  selectedCr = crList.findIndex((cr) =>{return cr == crByChance[key]});
+                }
+                min = parseInt(key);
+              }
+              //selectedCr = Math.floor(Math.random() * crList.length);
+            } while(currentMonsterExp + expTable[crList[selectedCr]] + expTable[crList[crList.length-1]] * (monsterCount - (i+1)) > adjustedPlayerExp + threshold);
             monsterCountByCr[crList[selectedCr]]++;
             currentMonsterExp += expTable[crList[selectedCr]];
             console.log("Randomly selected " + expTable[crList[selectedCr]]);
           } else {
             var minIndex = 0;
             crList.forEach(function(cr, index){
-              if(Math.abs((currentMonsterExp + expTable[cr]) - avgExpPerMonster * (i+1)) < Math.abs((currentMonsterExp + expTable[crList[minIndex]]) - avgExpPerMonster * (i+1))) {
+              if(Math.abs((currentMonsterExp + expTable[cr]) - avgExpPerMonster * (i+1)) < Math.abs((currentMonsterExp + expTable[crList[minIndex]]) - avgExpPerMonster * (i+1)) /*&& currentMonsterExp + expTable[cr] <= adjustedPlayerExp + threshold*/) {
                 minIndex = index;
               }
             });
@@ -149,7 +164,8 @@ app.get("/", function (req, res) {
                 wisdom: monster.wisdom,
                 charisma: monster.charisma
               },
-              challenge_rating: monster.challenge_rating
+              challenge_rating: monster.challenge_rating,
+              exp: expTable[monster.challenge_rating]
             }
             customMonsterList.push(newMonster);
           });
@@ -177,9 +193,9 @@ function fetchMonsters(level, interval, difficulty) {
   return new Promise((resolve) => {
     var difficultyOffset = 0;
     switch(difficulty) {
-      case("hard"): difficultyOffset = 1; 
+      case("hard"): difficultyOffset = 2; 
       break;
-      case("deadly"): difficultyOffset = 2;
+      case("deadly"): difficultyOffset = 3;
       break;
       default: difficultyOffset = 0;
       break;
