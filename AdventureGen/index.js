@@ -14,6 +14,7 @@ app.get("/", function (req, res) {
     var encounters = req.body.encounters;
     if(Array.isArray(players) && players.length > 0 && Array.isArray(encounters) && encounters.length > 0) {
       console.log(players + " " + encounters);
+      fetchEncounter(0, players, encounters);
     } else {
       res.statusCode = 400;
       res.json({status: 400, Description: "Bad Request", Details: "Player levels array and encounter difficulty array expected"});
@@ -24,32 +25,12 @@ app.get("/", function (req, res) {
   }
 });
 
-function fetchMonsters(level, interval, difficulty) {
+function fetchEncounter(encIndex, players, encounters) {
   return new Promise((resolve) => {
-    var difficultyOffset = 0;
-    switch(difficulty) {
-      case("hard"): difficultyOffset = 2; 
-      break;
-      case("deadly"): difficultyOffset = 3;
-      break;
-      default: difficultyOffset = 0;
-      break;
-    }
-    var intervalValue = interval-difficultyOffset;
-    var monsterCRLevels = []
-    for(var i = level+difficultyOffset; i>-3 && i>level-intervalValue; i--) {
-      var cr = "";
-      switch(i) {
-        case 0: cr = "1/2";
-        break;
-        case -1: cr = "1/4";
-        break;
-        case -2: cr = "1/8";
-        break;
-        default: cr = ""+i;
-      }
-      monsterCRLevels[level-(i-difficultyOffset)] = cr;
-    }
+    var reqJson = {
+      difficulty: encounters[encIndex],
+      players: players
+    };
     var requestsArr = [];
     var dataArray = [];
     for(var i = 0; i<monsterCRLevels.length; i++) {
