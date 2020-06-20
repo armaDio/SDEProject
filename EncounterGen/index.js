@@ -5,8 +5,8 @@ var axios = require("axios");
 var htmlParser = require("htmlparser");
 var app = express();
 
-app.listen(3000, function () {
-  console.log("Example app listening on port 3000!");
+app.listen(3002, function () {
+  console.log("Example app listening on port 3002!");
 });
 
 app.use(bodyParser.json());
@@ -41,6 +41,9 @@ tmplines.forEach(function(line){
 });
 
 app.get("/", function (req, res) {
+  console.log("Req received");
+  console.log(req.header("Content-Type"));
+  console.log(req.body);
   if(req.header("Content-Type") == "application/json") {
     var players = req.body.players;
     var difficulty = req.body.difficulty;
