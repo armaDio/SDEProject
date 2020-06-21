@@ -114,7 +114,7 @@ app.get("/", function (req, res) {
         });
         Loot_fetches.push(lootpromise);
       });
-      Promise.all(Loot_fetches).then((responseArray) => {
+      Promise.all(Loot_fetches).then(function(responseArray){
         var totalXP = 0;
           rtnMonsters.forEach(element => {
             console.log(element.XPreward);
@@ -124,7 +124,13 @@ app.get("/", function (req, res) {
           //console.log(rtnMonsters);
         res.statusCode = 200;
         res.json({TotalXP: totalXP, rewards: rtnMonsters});
+      }, function(error){
+        res.statusCode = 500;
+        res.json({status: 500, Description: "Internal Error", Details: error});
       });
+    }, function(error){
+      res.statusCode = 500;
+      res.json({status: 500, Description: "Internal Error", Details: error});
     });
   } else {
       res.statusCode = 400;
@@ -198,18 +204,20 @@ function getLootReward(attr){
 }
 
 function getLootList(){
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     var url = "https://www.dnd5eapi.co/api/equipment/";
     axios.get(url).then(function(response){
       resolve(response.data);
       //console.log(response.data);
+    }, function(error){
+      reject(error);
     });
   });
 
 }
 
 function getLootDetails(item){
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     var url = "https://www.dnd5eapi.co"+item;
     axios.get(url).then(function(response){
       //console.error(response.data);
@@ -219,6 +227,8 @@ function getLootDetails(item){
       if(chance <35)
         data.push(response.data);
       resolve(data);
+    }, function(error){
+      reject(error);
     });
   });
 

@@ -3,6 +3,7 @@ var bodyParser = require("body-parser");
 var fs = require("fs");
 var axios = require("axios");
 var htmlParser = require("htmlparser");
+const { rejects } = require("assert");
 var app = express();
 
 app.listen(3002, function () {
@@ -47,144 +48,154 @@ app.get("/", function (req, res) {
   if(req.header("Content-Type") == "application/json") {
     var players = req.body.players;
     var difficulty = req.body.difficulty;
-    if(Array.isArray(players) && players.length > 0 && difficulty != undefined) {
-      console.log(difficulty);
-      console.log(players);
-      var totalPlayerExp = 0;
-      var avgPlayerLevel = 0;
-      players.forEach(function(level){
-        totalPlayerExp += thresholdTable[level][difficulty];
-        avgPlayerLevel += parseInt(level);
-      });
-      avgPlayerLevel = Math.floor(avgPlayerLevel/players.length);
-      fetchMonsters(avgPlayerLevel, 12, difficulty).then(function(monsterListArrayRaw){
-        console.log("Requests completed");
-        var monsterListByCR = {};
-        var crList = [];
-        monsterListArrayRaw.forEach(function(list, index){
-          crList[index] = list.results[0].challenge_rating;
-          monsterListByCR[list.results[0].challenge_rating] = list.results;
+    if(validateLevels(players)) {
+      if(validateDifficulty(difficulty)) {
+        console.log(difficulty);
+        console.log(players);
+        var totalPlayerExp = 0;
+        var avgPlayerLevel = 0;
+        players.forEach(function(level){
+          totalPlayerExp += thresholdTable[level][difficulty];
+          avgPlayerLevel += parseInt(level);
         });
-        var monsterCount = 0;
-        var maxMonsterCount = 20;
-        var adjustedPlayerExp = 0;
-        do {
-          monsterCount = Math.floor(Math.random() * (maxMonsterCount+1))+1;
-          var multiplier = multTable["-"];
-          var tmpMax = Number.MAX_SAFE_INTEGER;
-          for(var key of Object.keys(multTable)) {
-            if(key != "-" && monsterCount <= parseInt(key) && parseInt(key) < tmpMax) {
-              tmpMax = parseInt(key);
-              multiplier = multTable[""+tmpMax];
+        avgPlayerLevel = Math.floor(avgPlayerLevel/players.length);
+        fetchMonsters(avgPlayerLevel, 12, difficulty).then(function(monsterListArrayRaw){
+          console.log("Requests completed");
+          var monsterListByCR = {};
+          var crList = [];
+          monsterListArrayRaw.forEach(function(list, index){
+            crList[index] = list.results[0].challenge_rating;
+            monsterListByCR[list.results[0].challenge_rating] = list.results;
+          });
+          var monsterCount = 0;
+          var maxMonsterCount = 20;
+          var adjustedPlayerExp = 0;
+          do {
+            monsterCount = Math.floor(Math.random() * (maxMonsterCount+1))+1;
+            var multiplier = multTable["-"];
+            var tmpMax = Number.MAX_SAFE_INTEGER;
+            for(var key of Object.keys(multTable)) {
+              if(key != "-" && monsterCount <= parseInt(key) && parseInt(key) < tmpMax) {
+                tmpMax = parseInt(key);
+                multiplier = multTable[""+tmpMax];
+              }
             }
-          }
-          adjustedPlayerExp = Math.floor(totalPlayerExp / parseFloat(multiplier));
-          if(Math.floor(adjustedPlayerExp / expTable[crList[crList.length-1]]) < monsterCount) {
-            monsterCount = 0;
-          }
-        } while(monsterCount < 1);
-        var currentMonsterExp = 0;
-        var monsterCountByCr = {};
-        console.log(crList);
-        console.log(totalPlayerExp + " " + avgPlayerLevel);
-        console.log(adjustedPlayerExp + " " + monsterCount);
-        for(var i = 0; i<crList.length; i++) {
-          monsterCountByCr[""+crList[i]] = 0;
-        }
-        var avgExpPerMonster = Math.floor(adjustedPlayerExp / monsterCount);
-        var threshold = Math.floor(adjustedPlayerExp * 0.05);
-        for(var i = 0; i<monsterCount; i++) {
-          console.log("Monster " + (i+1) + " difference = " + Math.abs(currentMonsterExp - avgExpPerMonster * i) + " threshold = " + threshold);
-          var crByChance = {}
-          var totDiff = 0;
-          if(Math.abs(currentMonsterExp - avgExpPerMonster * i) < threshold && i != monsterCount-1) {
-            for(var j = 0; j<crList.length; j++) {
-              totDiff += Math.abs((currentMonsterExp + expTable[crList[j]]) - avgExpPerMonster * (i+1));
-              crByChance[""+totDiff] = crList[j];
+            adjustedPlayerExp = Math.floor(totalPlayerExp / parseFloat(multiplier));
+            if(Math.floor(adjustedPlayerExp / expTable[crList[crList.length-1]]) < monsterCount) {
+              monsterCount = 0;
             }
-            var selectedCr = 0;
-            do {
-              var min = 0;
-              var randomVal = Math.floor(Math.random() * (totDiff+1));
-              for(var key of Object.keys(crByChance)) {
-                if(randomVal > min && randomVal <= parseInt(key)) {
-                  selectedCr = crList.findIndex((cr) =>{return cr == crByChance[key]});
+          } while(monsterCount < 1);
+          var currentMonsterExp = 0;
+          var monsterCountByCr = {};
+          console.log(crList);
+          console.log(totalPlayerExp + " " + avgPlayerLevel);
+          console.log(adjustedPlayerExp + " " + monsterCount);
+          for(var i = 0; i<crList.length; i++) {
+            monsterCountByCr[""+crList[i]] = 0;
+          }
+          var avgExpPerMonster = Math.floor(adjustedPlayerExp / monsterCount);
+          var threshold = Math.floor(adjustedPlayerExp * 0.05);
+          for(var i = 0; i<monsterCount; i++) {
+            console.log("Monster " + (i+1) + " difference = " + Math.abs(currentMonsterExp - avgExpPerMonster * i) + " threshold = " + threshold);
+            var crByChance = {}
+            var totDiff = 0;
+            if(Math.abs(currentMonsterExp - avgExpPerMonster * i) < threshold && i != monsterCount-1) {
+              for(var j = 0; j<crList.length; j++) {
+                totDiff += Math.abs((currentMonsterExp + expTable[crList[j]]) - avgExpPerMonster * (i+1));
+                crByChance[""+totDiff] = crList[j];
+              }
+              var selectedCr = 0;
+              do {
+                var min = 0;
+                var randomVal = Math.floor(Math.random() * (totDiff+1));
+                for(var key of Object.keys(crByChance)) {
+                  if(randomVal > min && randomVal <= parseInt(key)) {
+                    selectedCr = crList.findIndex((cr) =>{return cr == crByChance[key]});
+                  }
+                  min = parseInt(key);
                 }
-                min = parseInt(key);
-              }
-              //selectedCr = Math.floor(Math.random() * crList.length);
-            } while(currentMonsterExp + expTable[crList[selectedCr]] + expTable[crList[crList.length-1]] * (monsterCount - (i+1)) > adjustedPlayerExp + threshold);
-            monsterCountByCr[crList[selectedCr]]++;
-            currentMonsterExp += expTable[crList[selectedCr]];
-            console.log("Randomly selected " + expTable[crList[selectedCr]]);
-          } else {
-            var minIndex = 0;
-            crList.forEach(function(cr, index){
-              if(Math.abs((currentMonsterExp + expTable[cr]) - avgExpPerMonster * (i+1)) < Math.abs((currentMonsterExp + expTable[crList[minIndex]]) - avgExpPerMonster * (i+1)) /*&& currentMonsterExp + expTable[cr] <= adjustedPlayerExp + threshold*/) {
-                minIndex = index;
-              }
-            });
-            monsterCountByCr[crList[minIndex]]++;
-            currentMonsterExp += expTable[crList[minIndex]];
-            console.log("Forced selection " + expTable[crList[minIndex]]);
-          }
-        }
-        console.log(monsterCountByCr);
-        var encounterMonsters = [];
-        var responseCRList = {};
-        var sum = 0;
-        for(var key of Object.keys(monsterCountByCr)) {
-          sum += monsterCountByCr[key] * expTable[key];
-          if(monsterCountByCr[key] > 0) {
-            responseCRList[key] = monsterCountByCr[key];
-          }
-          for(var i = 0; i<monsterCountByCr[key]; i++) {
-            var randomIndex = Math.floor(Math.random() * monsterListByCR[key].length);
-            encounterMonsters.push(monsterListByCR[key][randomIndex]);
-          }
-        }
-        console.log(sum);
-        fetchNames(encounterMonsters.length).then(function(names){
-          customMonsterList = [];
-          namesList = names.split(/\r?\n/);
-          console.log(namesList);
-          encounterMonsters.forEach(function(monster, index){
-            var newName = namesList[index]+" ("+monster.name+")";
-            var newMonster = {
-              name: newName,
-              size: monster.size,
-              type: monster.type,
-              alignment: monster.alignment,
-              armor_class: monster.armor_class,
-              hit_points: monster.hit_points,
-              hit_dice: monster.hit_dice,
-              speed: monster.speed,
-              stats: {
-                strength: monster.strength,
-                dexterity: monster.dexterity,
-                constitution: monster.constitution,
-                intelligence: monster.intelligence,
-                wisdom: monster.wisdom,
-                charisma: monster.charisma
-              },
-              challenge_rating: monster.challenge_rating,
-              exp: expTable[monster.challenge_rating]
+                //selectedCr = Math.floor(Math.random() * crList.length);
+              } while(currentMonsterExp + expTable[crList[selectedCr]] + expTable[crList[crList.length-1]] * (monsterCount - (i+1)) > adjustedPlayerExp + threshold);
+              monsterCountByCr[crList[selectedCr]]++;
+              currentMonsterExp += expTable[crList[selectedCr]];
+              console.log("Randomly selected " + expTable[crList[selectedCr]]);
+            } else {
+              var minIndex = 0;
+              crList.forEach(function(cr, index){
+                if(Math.abs((currentMonsterExp + expTable[cr]) - avgExpPerMonster * (i+1)) < Math.abs((currentMonsterExp + expTable[crList[minIndex]]) - avgExpPerMonster * (i+1)) /*&& currentMonsterExp + expTable[cr] <= adjustedPlayerExp + threshold*/) {
+                  minIndex = index;
+                }
+              });
+              monsterCountByCr[crList[minIndex]]++;
+              currentMonsterExp += expTable[crList[minIndex]];
+              console.log("Forced selection " + expTable[crList[minIndex]]);
             }
-            customMonsterList.push(newMonster);
+          }
+          console.log(monsterCountByCr);
+          var encounterMonsters = [];
+          var responseCRList = {};
+          var sum = 0;
+          for(var key of Object.keys(monsterCountByCr)) {
+            sum += monsterCountByCr[key] * expTable[key];
+            if(monsterCountByCr[key] > 0) {
+              responseCRList[key] = monsterCountByCr[key];
+            }
+            for(var i = 0; i<monsterCountByCr[key]; i++) {
+              var randomIndex = Math.floor(Math.random() * monsterListByCR[key].length);
+              encounterMonsters.push(monsterListByCR[key][randomIndex]);
+            }
+          }
+          console.log(sum);
+          fetchNames(encounterMonsters.length).then(function(names){
+            customMonsterList = [];
+            namesList = names.split(/\r?\n/);
+            console.log(namesList);
+            encounterMonsters.forEach(function(monster, index){
+              var newName = namesList[index]+" ("+monster.name+")";
+              var newMonster = {
+                name: newName,
+                size: monster.size,
+                type: monster.type,
+                alignment: monster.alignment,
+                armor_class: monster.armor_class,
+                hit_points: monster.hit_points,
+                hit_dice: monster.hit_dice,
+                speed: monster.speed,
+                stats: {
+                  strength: monster.strength,
+                  dexterity: monster.dexterity,
+                  constitution: monster.constitution,
+                  intelligence: monster.intelligence,
+                  wisdom: monster.wisdom,
+                  charisma: monster.charisma
+                },
+                challenge_rating: monster.challenge_rating,
+                exp: expTable[monster.challenge_rating]
+              }
+              customMonsterList.push(newMonster);
+            });
+            res.json({
+              difficulty: difficulty,
+              playerCount: players.length,
+              avgPartyLevel: avgPlayerLevel,
+              monstersCRList: responseCRList,
+              monsters: customMonsterList
+            });
+          }, function(error){
+            res.statusCode = 500;
+            res.json({status: 500, Description: "Internal Error", Details: error});
           });
-          res.json({
-            difficulty: difficulty,
-            playerCount: players.length,
-            avgPartyLevel: avgPlayerLevel,
-            monstersCRList: responseCRList,
-            monsters: customMonsterList
-          });
+        }, function(error){
+          res.statusCode = 500;
+          res.json({status: 500, Description: "Internal Error", Details: error});
         });
-        
-      });
+      } else {
+        res.statusCode = 400;
+        res.json({status: 400, Description: "Bad Request", Details: "Difficulty expected as value among 'easy', 'medium', 'hard' or 'deadly'"});
+      }
     } else {
       res.statusCode = 400;
-      res.json({status: 400, Description: "Bad Request", Details: "Player levels array and encounter difficulty expected"});
+      res.json({status: 400, Description: "Bad Request", Details: "Player levels array expected as array of integers ranging from 1 to 20"});
     }
   } else {
     res.statusCode = 400;
@@ -193,7 +204,7 @@ app.get("/", function (req, res) {
 });
 
 function fetchMonsters(level, interval, difficulty) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     var difficultyOffset = 0;
     switch(difficulty) {
       case("hard"): difficultyOffset = 2; 
@@ -224,20 +235,47 @@ function fetchMonsters(level, interval, difficulty) {
       var url = "https://api.open5e.com/monsters/?challenge_rating="+monsterCRLevels[i];
       requestsArr[i] = axios.get(url);
     }
-    Promise.all(requestsArr).then((responseArray) => {
+    Promise.all(requestsArr).then(function(responseArray){
       responseArray.forEach(function(response, index){
         dataArray[index] = response.data;
-      })
+      });
       resolve(dataArray);
+    }, function(error){
+      reject(error);
     });
   });
 }
 
 function fetchNames(count) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     var url = "https://donjon.bin.sh/name/rpc-name.fcgi?type=Draconic+Male&n="+count;
     axios.get(url).then(function(response){
       resolve(response.data);
+    }, function(error){
+      reject(error);
     });
   });
+}
+
+function validateLevels(players) {
+  var toRtn = true;
+  if(Array.isArray(players) && players.length > 0) {
+    players.forEach(function(player){
+      if(!(Number.isInteger(player)) || player < 1 || player > 20) {
+        toRtn = false;
+      }
+    });
+  } else {
+    toRtn = false;
+  }
+  return toRtn;
+}
+
+function validateDifficulty(difficulty) {
+  if(difficulty != undefined) {
+    if(["easy", "medium", "hard", "deadly"].includes(difficulty)) {
+      return true;
+    }
+  }
+  return false;
 }

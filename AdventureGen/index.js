@@ -31,29 +31,37 @@ app.get("/", function (req, res) {
   if(req.header("Content-Type") == "application/json") {
     var players = req.body.players;
     var encounters = req.body.encounters;
-    if(Array.isArray(players) && players.length > 0 && Array.isArray(encounters) && encounters.length > 0) {
-      console.log(players + " " + encounters);
-      fetchEncounter(0, players, encounters, [], 0).then(function(encArray){
-        var encounterList = [];
-        encArray.forEach(function(enc, index){
-          encounterList.push({
-            encIndex: index+1,
-            difficulty: enc.genEncounter.difficulty,
-            initPlayers: enc.oldPlayers,
-            monsters: enc.genEncounter.monsters,
-            encounterXP: enc.genReward.TotalXP,
-            rewards: enc.genReward.rewards,
-            newPlayers: enc.newPlayers
+    if(validateLevels(players)) {
+      if(validateDifficulties(encounters)) {
+        console.log(players + " " + encounters);
+        fetchEncounter(0, players, encounters, [], 0).then(function(encArray){
+          var encounterList = [];
+          encArray.forEach(function(enc, index){
+            encounterList.push({
+              encIndex: index+1,
+              difficulty: enc.genEncounter.difficulty,
+              initPlayers: enc.oldPlayers,
+              monsters: enc.genEncounter.monsters,
+              encounterXP: enc.genReward.TotalXP,
+              rewards: enc.genReward.rewards,
+              newPlayers: enc.newPlayers
+            });
           });
+          res.json({
+            reqEncounters: encounters,
+            genEncounters: encounterList
+          });
+        }, function(error){
+          res.statusCode = 500;
+          res.json({status: 500, Description: "Internal Error", Details: error});
         });
-        res.json({
-          reqEncounters: encounters,
-          genEncounters: encounterList
-        });
-      });
+      } else {
+        res.statusCode = 400;
+        res.json({status: 400, Description: "Bad Request", Details: "Encounters expected as array of values among 'easy', 'medium', 'hard' or 'deadly'"});
+      }
     } else {
       res.statusCode = 400;
-      res.json({status: 400, Description: "Bad Request", Details: "Player levels array and encounter difficulty array expected"});
+      res.json({status: 400, Description: "Bad Request", Details: "Player levels array expected as array of integers ranging from 1 to 20"});
     }
   } else {
     res.statusCode = 400;
@@ -62,7 +70,7 @@ app.get("/", function (req, res) {
 });
 
 function fetchEncounter(encIndex, players, encounters, tmpRes, tmpExp) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
       var prevPlayers = [];
       players.forEach(function(player, index){
         prevPlayers[index] = players[index];
@@ -109,7 +117,39 @@ function fetchEncounter(encIndex, players, encounters, tmpRes, tmpExp) {
           } else {
             resolve(tmpRes);
           }
+        }, function(error){
+          reject(error);
         });
+      }, function(error){
+        reject(error);
       });
   });
+}
+
+function validateLevels(players) {
+  var toRtn = true;
+  if(Array.isArray(players) && players.length > 0) {
+    players.forEach(function(player){
+      if(!(Number.isInteger(player)) || player < 1 || player > 20) {
+        toRtn = false;
+      }
+    });
+  } else {
+    toRtn = false;
+  }
+  return toRtn;
+}
+
+function validateDifficulties(difficulties) {
+  var toRtn = true;
+  if(Array.isArray(difficulties) && difficulties.length > 0) {
+    difficulties.forEach(function(difficulty){
+      if(!["easy", "medium", "hard", "deadly"].includes(difficulty)) {
+        toRtn = false;
+      }
+    });
+  } else {
+    toRtn = false;
+  }
+  return toRtn;
 }
