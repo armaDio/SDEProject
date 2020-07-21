@@ -6,6 +6,9 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/json2html/1.4.0/json2html.min.js"></script>
         <script src="./visualizer.js"></script>
 
+	<link href="./visualizer.css" rel="stylesheet">
+
+
         <script>
             var pgidx = 1;
             var encidx = 1;
@@ -56,9 +59,7 @@
                     contentType: "application/json",
                     success: function (result, status, xhr) {
                         $('#loading').hide();
-                        //document.write(result);
-    
-                        var json = document.result;
+                        var json = result;
                         $(function(){
                             
                             //Create a new visualizer object
@@ -66,8 +67,10 @@
                             
                             //Visualize the demo json object
                             _visualizer.visualize(json);
+               	    $('#result').show();
                         
                         });
+                     
                     },
                     error: function (xhr, status, error) {
                         alert("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText);	
@@ -78,7 +81,7 @@
         </script>
     </head>
     <body>
-        <div class="request">
+        <div id="request">
             <h3>Playing Characters:</h3>
             <div id="pgs">                
                 <input type=numbers class="pgs" name="pg0"/>
@@ -100,7 +103,7 @@
         <div id="loading" hidden>
             <img id="loading-image" src="ajax-loader.gif" alt="Loading..." />
         </div>
-        <div class="result">
+        <div id="result" hidden>
             
         </div>
     </body>
