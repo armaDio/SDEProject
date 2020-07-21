@@ -3,6 +3,9 @@
         <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
         <meta content="utf-8" http-equiv="encoding">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/json2html/1.4.0/json2html.min.js"></script>
+        <script src="./visualizer.js"></script>
+
         <script>
             var pgidx = 1;
             var encidx = 1;
@@ -24,8 +27,6 @@
                 if(document.getElementById(id).childElementCount<=4){
                     document.getElementById(id).children[document.getElementById(id).childElementCount-1].disabled = true;//("disabled")
                 }
-
-
             }
             
             function send(){
@@ -45,47 +46,62 @@
                 jsonObj.players = pgs;
                 jsonObj.encounters = encs;
                 console.log(jsonObj);
+                $('#request').hide();
                 $('#loading').show();
                 $.ajax({
-                type: "POST",
-                url: "http://localhost:3000/",
-                data: JSON.stringify(jsonObj),
-                dataType: "json",
-    		contentType: "application/json",
-                success: function (result, status, xhr) {
-                    setTimeout(function(){
+                    type: "POST",
+                    url: "http://localhost:3000/",
+                    data: JSON.stringify(jsonObj),
+                    dataType: "json",
+                    contentType: "application/json",
+                    success: function (result, status, xhr) {
                         $('#loading').hide();
-                    }, 15000); 
-                    document.write(result);
-                },
-                error: function (xhr, status, error) {
-                    alert("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText);	
-		  	alert(xhr.responseText);
-                }
-            });
+                        //document.write(result);
+    
+                        var json = document.result;
+                        $(function(){
+                            
+                            //Create a new visualizer object
+                            var _visualizer = new visualizer($("#result"));
+                            
+                            //Visualize the demo json object
+                            _visualizer.visualize(json);
+                        
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText);	
+                        alert(xhr.responseText);
+                    }
+                });
             }
         </script>
     </head>
     <body>
+        <div class="request">
+            <h3>Playing Characters:</h3>
+            <div id="pgs">                
+                <input type=numbers class="pgs" name="pg0"/>
+                <br/>
+                <button onclick="appendelement('pgs',pgidx); pgidx= pgidx+1;" id="addpg">+</button>
+                <button onclick="removeLastChild('pgs'); pgidx = pgidx-1;" id="rempg" disabled>-</button>
+            </div>
+            <br/> <br/>
+            <h3>Encounters:</h3>
+            <div id="encs">                
+                <input type=text class="encs" name="enc0"/>
+                <br/>
+                <button onclick="appendelement('encs',encidx); encidx = encidx+1;" id="addenc">+</button>
+                <button onclick="removeLastChild('encs'); encidx = encidx-1;" id="remenc" disabled>-</button>
+            </div>
+            <br/> <br/>
+            <button onclick="send()">Generate!</button>
+        </div>
         <div id="loading" hidden>
             <img id="loading-image" src="ajax-loader.gif" alt="Loading..." />
-          </div>
-        <h3>Playing Characters:</h3>
-        <div id="pgs">                
-            <input type=numbers class="pgs" name="pg0"/>
-            <br/>
-            <button onclick="appendelement('pgs',pgidx); pgidx= pgidx+1;" id="addpg">+</button>
-            <button onclick="removeLastChild('pgs'); pgidx = pgidx-1;" id="rempg" disabled>-</button>
         </div>
-        <br/> <br/>
-        <h3>Encounters:</h3>
-        <div id="encs">                
-            <input type=text class="encs" name="enc0"/>
-            <br/>
-            <button onclick="appendelement('encs',encidx); encidx = encidx+1;" id="addenc">+</button>
-            <button onclick="removeLastChild('encs'); encidx = encidx-1;" id="remenc" disabled>-</button>
+        <div class="result">
+            
         </div>
-        <br/> <br/>
-        <button onclick="send()">Generate!</button>
-        </body>
+    </body>
 </html>
