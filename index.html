@@ -1,0 +1,91 @@
+<html>
+    <head>
+        <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+        <meta content="utf-8" http-equiv="encoding">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script>
+            var pgidx = 1;
+            var encidx = 1;
+            function appendelement(id, index){
+                var input = document.createElement("input");
+                input.setAttribute("name", id+index);
+                input.setAttribute("type", "text");
+                input.setAttribute("class", id);
+                document.getElementById(id).insertBefore(input, document.getElementById(id).children[document.getElementById(id).childElementCount-2]);
+                document.getElementById(id).insertBefore(document.createElement("br"),document.getElementById(id).children[document.getElementById(id).childElementCount-2]);
+                if(document.getElementById(id).childElementCount>4){
+                    document.getElementById(id).children[document.getElementById(id).childElementCount-1].disabled = false;//("disabled");
+                }
+            }
+
+            function removeLastChild(id){
+                document.getElementById(id).children[document.getElementById(id).childElementCount-3].remove();
+                document.getElementById(id).children[document.getElementById(id).childElementCount-3].remove();
+                if(document.getElementById(id).childElementCount<=4){
+                    document.getElementById(id).children[document.getElementById(id).childElementCount-1].disabled = true;//("disabled")
+                }
+
+
+            }
+            
+            function send(){
+                var jsonObj = {};
+                var pgs = new Array();
+                var encs = new Array();
+
+                var classpgs = document.getElementsByClassName("pgs");
+                for(i = 0; i<classpgs.length; i++){
+                    pgs.push(+classpgs[i].value);
+                }
+
+                var classencs = document.getElementsByClassName("encs");
+                for(i = 0; i<classencs.length; i++){
+                    encs.push(classencs[i].value);
+                }
+                jsonObj.players = pgs;
+                jsonObj.encounters = encs;
+                console.log(jsonObj);
+                $('#loading').show();
+                $.ajax({
+                type: "POST",
+                url: "http://localhost:3000/",
+                data: JSON.stringify(jsonObj),
+                dataType: "json",
+    		contentType: "application/json",
+                success: function (result, status, xhr) {
+                    setTimeout(function(){
+                        $('#loading').hide();
+                    }, 15000); 
+                    document.write(result);
+                },
+                error: function (xhr, status, error) {
+                    alert("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText);	
+		  	alert(xhr.responseText);
+                }
+            });
+            }
+        </script>
+    </head>
+    <body>
+        <div id="loading" hidden>
+            <img id="loading-image" src="ajax-loader.gif" alt="Loading..." />
+          </div>
+        <h3>Playing Characters:</h3>
+        <div id="pgs">                
+            <input type=numbers class="pgs" name="pg0"/>
+            <br/>
+            <button onclick="appendelement('pgs',pgidx); pgidx= pgidx+1;" id="addpg">+</button>
+            <button onclick="removeLastChild('pgs'); pgidx = pgidx-1;" id="rempg" disabled>-</button>
+        </div>
+        <br/> <br/>
+        <h3>Encounters:</h3>
+        <div id="encs">                
+            <input type=text class="encs" name="enc0"/>
+            <br/>
+            <button onclick="appendelement('encs',encidx); encidx = encidx+1;" id="addenc">+</button>
+            <button onclick="removeLastChild('encs'); encidx = encidx-1;" id="remenc" disabled>-</button>
+        </div>
+        <br/> <br/>
+        <button onclick="send()">Generate!</button>
+        </body>
+</html>

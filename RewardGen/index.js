@@ -4,6 +4,7 @@ var fs = require("fs");
 var axios = require("axios");
 var htmlParser = require("htmlparser");
 var app = express();
+var cors = require('cors');
 
 //importing CSVs
 {
@@ -85,6 +86,9 @@ var app = express();
 app.listen(3001, function () {
   console.log("Example app listening on port 3001!");
 });
+
+
+app.use(cors());
 
 app.use(bodyParser.json());
 

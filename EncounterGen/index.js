@@ -5,11 +5,16 @@ var axios = require("axios");
 var htmlParser = require("htmlparser");
 const { rejects } = require("assert");
 var app = express();
+var cors = require('cors');
+
 
 app.listen(3002, function () {
   console.log("Example app listening on port 3002!");
 });
 
+
+
+app.use(cors());
 app.use(bodyParser.json());
 
 var thresholdRaw = fs.readFileSync(__dirname+"/data/threshold.csv", "utf8");

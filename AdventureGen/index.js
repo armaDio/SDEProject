@@ -3,12 +3,20 @@ var bodyParser = require("body-parser");
 var axios = require("axios");
 var fs = require("fs");
 var app = express();
+var cors = require('cors');
 
 app.listen(3000, function () {
   console.log("Example app listening on port 3000!");
 });
 
-app.use(bodyParser.json());
+app.use(cors());
+
+app.use(//function(req, res, next) {  
+  bodyParser.json()
+  //res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
+  //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  //next();
+/*}*/);
 
 var expRaw = fs.readFileSync(__dirname+"/data/exp.csv", "utf8");
 var playerExpRaw = fs.readFileSync(__dirname+"/data/playerExp.csv", "utf8");
@@ -27,7 +35,9 @@ tmplines.forEach(function(line){
   playerExpTable[""+level] = tmpvals[0];
 });
 
-app.get("/", function (req, res) {
+app.post("/", function (req, res) {
+  console.log(req.body);
+  console.log(req);
   if(req.header("Content-Type") == "application/json") {
     var players = req.body.players;
     var encounters = req.body.encounters;
