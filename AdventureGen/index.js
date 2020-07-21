@@ -4,6 +4,7 @@ var axios = require("axios");
 var fs = require("fs");
 var app = express();
 var cors = require('cors');
+const url = require('url');
 
 app.listen(3000, function () {
   console.log("Example app listening on port 3000!");
@@ -35,40 +36,79 @@ tmplines.forEach(function(line){
   playerExpTable[""+level] = tmpvals[0];
 });
 
-app.post("/", function (req, res) {
+app.get("/adventure", function (req, res) {
   console.log(req.body);
   console.log(req);
   if(req.header("Content-Type") == "application/json") {
     var players = req.body.players;
     var encounters = req.body.encounters;
+    var curve = req.body.curve;
+    var numEncounters = req.body.numEncounters;
     if(validateLevels(players)) {
-      if(validateDifficulties(encounters)) {
-        console.log(players + " " + encounters);
-        fetchEncounter(0, players, encounters, [], 0).then(function(encArray){
-          var encounterList = [];
-          encArray.forEach(function(enc, index){
-            encounterList.push({
-              encIndex: index+1,
-              difficulty: enc.genEncounter.difficulty,
-              initPlayers: enc.oldPlayers,
-              monsters: enc.genEncounter.monsters,
-              encounterXP: enc.genReward.TotalXP,
-              rewards: enc.genReward.rewards,
-              newPlayers: enc.newPlayers
+      if(curve == undefined) {
+        if(validateDifficulties(encounters)) {
+          console.log(players + " " + encounters);
+          fetchEncounter(0, players, encounters, [], 0).then(function(encArray){
+            var encounterList = [];
+            encArray.forEach(function(enc, index){
+              encounterList.push({
+                encIndex: index+1,
+                difficulty: enc.genEncounter.difficulty,
+                initPlayers: enc.oldPlayers,
+                monsters: enc.genEncounter.monsters,
+                encounterXP: enc.genReward.TotalXP,
+                rewards: enc.genReward.rewards,
+                newPlayers: enc.newPlayers
+              });
             });
+            res.json({
+              reqEncounters: encounters,
+              genEncounters: encounterList
+            });
+          }, function(error){
+            res.statusCode = 500;
+            res.json({status: 500, Description: "Internal Error", Details: error});
           });
-          res.json({
-            reqEncounters: encounters,
-            genEncounters: encounterList
-          });
-        }, function(error){
-          res.statusCode = 500;
-          res.json({status: 500, Description: "Internal Error", Details: error});
-        });
+        } else {
+          res.statusCode = 400;
+          res.json({status: 400, Description: "Bad Request", Details: "Encounters expected as array of values among 'easy', 'medium', 'hard' or 'deadly'"});
+        }
       } else {
-        res.statusCode = 400;
-        res.json({status: 400, Description: "Bad Request", Details: "Encounters expected as array of values among 'easy', 'medium', 'hard' or 'deadly'"});
+        if(validateCurve(curve)) {
+          if(validateNumEnc(numEncounters)) {
+            encounters = generateEncounters(curve, numEncounters);
+            console.log(players + " " + encounters);
+            fetchEncounter(0, players, encounters, [], 0).then(function(encArray){
+              var encounterList = [];
+              encArray.forEach(function(enc, index){
+                encounterList.push({
+                  encIndex: index+1,
+                  difficulty: enc.genEncounter.difficulty,
+                  initPlayers: enc.oldPlayers,
+                  monsters: enc.genEncounter.monsters,
+                  encounterXP: enc.genReward.TotalXP,
+                  rewards: enc.genReward.rewards,
+                  newPlayers: enc.newPlayers
+                });
+              });
+              res.json({
+                reqEncounters: encounters,
+                genEncounters: encounterList
+              });
+            }, function(error){
+              res.statusCode = 500;
+              res.json({status: 500, Description: "Internal Error", Details: error});
+            });
+          } else {
+            res.statusCode = 400;
+          res.json({status: 400, Description: "Bad Request", Details: "Curve also expects numEncounters as an integer ranging from 1 to 15"});
+          }
+        } else {
+          res.statusCode = 400;
+          res.json({status: 400, Description: "Bad Request", Details: "Curve expected as value among 'standard', 'challenging' or 'impossible'"});
+        }
       }
+      
     } else {
       res.statusCode = 400;
       res.json({status: 400, Description: "Bad Request", Details: "Player levels array expected as array of integers ranging from 1 to 20"});
@@ -162,4 +202,77 @@ function validateDifficulties(difficulties) {
     toRtn = false;
   }
   return toRtn;
+}
+
+function validateCurve(curve) {
+  if(curve != undefined) {
+    if(["standard", "challenging", "impossible"].includes(curve)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function validateNumEnc(numEncounters) {
+  if(numEncounters != undefined) {
+    if((Number.isInteger(numEncounters)) && numEncounters > 0 && numEncounters < 16) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function generateEncounters(curve, numEncounters) {
+  var encounters = [];
+  switch(curve){
+    case 'standard':
+      for(var i = 0; i < numEncounters; i++) {
+        switch(i % 5) {
+          case 0: encounters.push('easy');
+            break;
+          case 1: encounters.push('easy');
+            break;
+          case 2: encounters.push('medium');
+            break;
+          case 3: encounters.push('medium');
+            break;
+          case 4: encounters.push('hard');
+            break;
+        }
+      }
+      break;
+    case 'challenging':
+      for(var i = 0; i < numEncounters; i++) {
+        switch(i % 5) {
+          case 0: encounters.push('easy');
+            break;
+          case 1: encounters.push('medium');
+            break;
+          case 2: encounters.push('medium');
+            break;
+          case 3: encounters.push('hard');
+            break;
+          case 4: encounters.push('deadly');
+            break;
+        }
+      }
+      break;
+    case 'impossible':
+      for(var i = 0; i < numEncounters; i++) {
+        switch(i % 5) {
+          case 0: encounters.push('medium');
+            break;
+          case 1: encounters.push('hard');
+            break;
+          case 2: encounters.push('hard');
+            break;
+          case 3: encounters.push('deadly');
+            break;
+          case 4: encounters.push('deadly');
+            break;
+        }
+      }
+      break;
+  }
+  return encounters;
 }
