@@ -92,7 +92,7 @@ app.use(cors());
 
 app.use(bodyParser.json());
 
-app.get("/", function (req, res) {
+app.post("/rewards", function (req, res) {
   var tortn = {};
   if(req.header("Content-Type") == "application/json") {
     var monsters = req.body.monsters;
@@ -112,7 +112,7 @@ app.get("/", function (req, res) {
         
         //getLootReward(monster.challenge_rating);
         var lootpromise = getLootDetails(list.results[randIdx].url).then(function(item){
-          rtnMonster.LootReward = {money: getLootReward(monster.challenge_rating), items : item};
+          rtnMonster.LootReward = {money: getLootReward(monster.challenge_rating), items : item.results};
           rtnMonsters.push(rtnMonster);
           //console.error(rtnMonster);
         });
@@ -209,7 +209,7 @@ function getLootReward(attr){
 
 function getLootList(){
   return new Promise((resolve, reject) => {
-    var url = "https://www.dnd5eapi.co/api/equipment/";
+    var url = "http://localhost:3008/items";
     axios.get(url).then(function(response){
       resolve(response.data);
       //console.log(response.data);
@@ -222,7 +222,7 @@ function getLootList(){
 
 function getLootDetails(item){
   return new Promise((resolve, reject) => {
-    var url = "https://www.dnd5eapi.co"+item;
+    var url = "http://localhost:3008/items?path="+item;
     axios.get(url).then(function(response){
       //console.error(response.data);
       //console.error(url);

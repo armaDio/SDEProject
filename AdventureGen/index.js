@@ -36,9 +36,9 @@ tmplines.forEach(function(line){
   playerExpTable[""+level] = tmpvals[0];
 });
 
-app.get("/adventure", function (req, res) {
-  console.log(req.body);
-  console.log(req);
+app.post("/adventure", function (req, res) {
+  //console.log(req.body);
+  //console.log(req);
   if(req.header("Content-Type") == "application/json") {
     var players = req.body.players;
     var encounters = req.body.encounters;
@@ -135,13 +135,14 @@ function fetchEncounter(encIndex, players, encounters, tmpRes, tmpExp) {
         difficulty: encounters[encIndex],
         players: prevPlayers
       };
-      var encUrl = "http://localhost:3002/";
-      var rewUrl = "http://localhost:3001/";
+      var encUrl = "http://localhost:3002/encounter";
+      var rewUrl = "http://localhost:3001/rewards";
       console.log("enc req here");
-      axios.get(encUrl, {data: encReqJson, headers: {"Content-Type": "application/json"}}).then(function(encResponse){
+      console.log(encUrl);
+      axios.post(encUrl, encReqJson, { headers: {"Content-Type": "application/json"}}).then(function(encResponse){
         console.log("enc res received");
         console.log("rew req here");
-        axios.get(rewUrl, {data: {monsters: encResponse.data.monsters}, headers: {"Content-Type": "application/json"}}).then(function(rewResponse){
+        axios.post(rewUrl, {monsters: encResponse.data.monsters}, { headers: {"Content-Type": "application/json"}}).then(function(rewResponse){
           console.log("rew res received");
           tmpExp += rewResponse.data.TotalXP;
           console.log(Math.floor(tmpExp/players.length));

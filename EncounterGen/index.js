@@ -46,9 +46,8 @@ tmplines.forEach(function(line){
   multTable[""+npcCount] = parseFloat(tmpvals[1]);
 });
 
-app.get("/", function (req, res) {
+app.post("/encounter", function (req, res) {
   console.log("Req received");
-  console.log(req.header("Content-Type"));
   console.log(req.body);
   if(req.header("Content-Type") == "application/json") {
     var players = req.body.players;
@@ -151,32 +150,14 @@ app.get("/", function (req, res) {
             }
           }
           console.log(sum);
-          fetchNames(encounterMonsters.length).then(function(names){
-            customMonsterList = [];
-            namesList = names.split(/\r?\n/);
+          fetchNames(encounterMonsters.length).then(function(response){
+            var customMonsterList = [];
+            var namesList = response.results;
             console.log(namesList);
             encounterMonsters.forEach(function(monster, index){
               var newName = namesList[index]+" ("+monster.name+")";
-              var newMonster = {
-                name: newName,
-                size: monster.size,
-                type: monster.type,
-                alignment: monster.alignment,
-                armor_class: monster.armor_class,
-                hit_points: monster.hit_points,
-                hit_dice: monster.hit_dice,
-                speed: monster.speed,
-                stats: {
-                  strength: monster.strength,
-                  dexterity: monster.dexterity,
-                  constitution: monster.constitution,
-                  intelligence: monster.intelligence,
-                  wisdom: monster.wisdom,
-                  charisma: monster.charisma
-                },
-                challenge_rating: monster.challenge_rating,
-                exp: expTable[monster.challenge_rating]
-              }
+              var newMonster = monster;
+              newMonster.name = newName;
               customMonsterList.push(newMonster);
             });
             res.json({
@@ -234,6 +215,51 @@ function fetchMonsters(level, interval, difficulty) {
       }
       monsterCRLevels[level-(i-difficultyOffset)] = cr;
     }
+    var queryString = "?";
+    for(var i = 0; i<monsterCRLevels.length; i++) {
+      queryString += "cr=";
+      queryString += monsterCRLevels[i];
+      if(i != monsterCRLevels.length-1) {
+        queryString += "&";
+      }
+    }
+    var url = "http://localhost:3008/monsters"+queryString;
+    axios.get(url).then(function(response){
+        data = response.data.results;
+      resolve(data);
+    }, function(error){
+      reject(error);
+    });
+  });
+}
+
+/*
+function fetchMonsters(level, interval, difficulty) {
+  return new Promise((resolve, reject) => {
+    var difficultyOffset = 0;
+    switch(difficulty) {
+      case("hard"): difficultyOffset = 2; 
+      break;
+      case("deadly"): difficultyOffset = 3;
+      break;
+      default: difficultyOffset = 0;
+      break;
+    }
+    var intervalValue = interval-difficultyOffset;
+    var monsterCRLevels = []
+    for(var i = level+difficultyOffset; i>-3 && i>level-intervalValue; i--) {
+      var cr = "";
+      switch(i) {
+        case 0: cr = "1/2";
+        break;
+        case -1: cr = "1/4";
+        break;
+        case -2: cr = "1/8";
+        break;
+        default: cr = ""+i;
+      }
+      monsterCRLevels[level-(i-difficultyOffset)] = cr;
+    }
     var requestsArr = [];
     var dataArray = [];
     for(var i = 0; i<monsterCRLevels.length; i++) {
@@ -250,10 +276,11 @@ function fetchMonsters(level, interval, difficulty) {
     });
   });
 }
+*/
 
 function fetchNames(count) {
   return new Promise((resolve, reject) => {
-    var url = "https://donjon.bin.sh/name/rpc-name.fcgi?type=Draconic+Male&n="+count;
+    var url = "http://localhost:3008/names?count="+count;
     axios.get(url).then(function(response){
       resolve(response.data);
     }, function(error){
