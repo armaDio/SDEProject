@@ -4,6 +4,7 @@ var axios = require("axios");
 var fs = require("fs");
 var app = express();
 var cors = require('cors');
+const { json } = require("express");
 
 app.listen(3012, function () {
   console.log("Example app listening on port 3012!");
@@ -38,7 +39,7 @@ app.get("/items", function (req, res) {
     fetchItem(path).then(function(response){
       res.statusCode = 200;
       res.json({
-        results: response
+        results: marshal(response)
       });
     }, function(error){
       res.statusCode = 500;
@@ -67,4 +68,42 @@ function fetchItem(path) {
       reject(error);
     });
   });
+}
+
+function marshal(rawitem){
+    var newitem = new JSON();
+    newitem.name = rawitem.name;
+    newitem.weight = rawitem.weight;
+    newitem.cost = rawitem.cost;
+
+    newitem.equipment_category= rawitem.equipment_category.name;
+    switch(newitem.equipment_category){
+      case "Weapon":
+          newitem.weapon_category = rawitem.weapon_category;
+          newitem.weapon_range = rawitem.weapon_range;
+          break;
+      case "Armor":
+          newitem.armor_category = rawitem.armor_category;
+          newitem.armor_class = rawitem.armor_class.base;
+          break;
+      case "Tools":
+          newitem.tool_category = rawitem.tool_category;
+          newitem.desc = rawitem.desc;
+          break;
+      case "Adventuring Gear":
+          newitem.desc = rawitem.desc;
+          newitem.gear_category = rawitem.gear_category;
+          if(newitem.gear_category == "Equipment Pack")
+            newitem.contents = rawitem.contents;
+          break;
+      case "Mounts and Vehicles":
+          newitem.vehicle_category = rawitem.vehicle_category;
+          if(newitem.gear_category == "Mounts and Other Animals")
+            newitem.capacity = rawitem.capacity;
+          if(newitem.gear_category == "Mounts and Other Animals" || newitem.gear_category == "Waterborne Vehicles")
+            newitem.speed = rawitem.speed;
+          break;
+
+    }
+
 }

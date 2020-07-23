@@ -35,6 +35,8 @@
             function send(){
                 var jsonObj = {};
                 var pgs = new Array();
+                var curve = $( "#curve" ).val();
+                var numEncounters = $("#numEncounters").val();
                 var encs = new Array();
 
                 var classpgs = document.getElementsByClassName("pgs");
@@ -47,7 +49,12 @@
                     encs.push(classencs[i].value);
                 }
                 jsonObj.players = pgs;
-                jsonObj.encounters = encs;
+                if(curve != ""){
+                    jsonObj.curve = curve;
+                    jsonObj.numEncounters = +numEncounters;
+                }else{
+                    jsonObj.encounters = encs;
+                }
                 console.log(jsonObj);
                 $('#request').hide();
                 $('#loading').show();
@@ -61,20 +68,19 @@
                         $('#loading').hide();
                         var json = result;
                         $(function(){
-                            
-                            //Create a new visualizer object
                             var _visualizer = new visualizer($("#result"));
-                            
-                            //Visualize the demo json object
                             _visualizer.visualize(json);
-               	    $('#result').show();
+               	        $('#result').show();
                         
                         });
                      
                     },
                     error: function (xhr, status, error) {
-                        alert("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText);	
-                        alert(xhr.responseText);
+               	        $('#loading').hide();
+               	        $('#error').show();
+                        $('#errcode').text(+xhr.status);
+                        $('#errdetails').text(xhr.statusText);
+                        $('#errmessage').text(xhr.responseText);
                     }
                 });
             }
@@ -84,20 +90,33 @@
         <div id="request">
             <h3>Playing Characters:</h3>
             <div id="pgs">                
-                <input type=numbers class="pgs" name="pg0"/>
+                <input type="text" class="pgs" name="pg0"/>
                 <br/>
                 <button onclick="appendelement('pgs',pgidx); pgidx= pgidx+1;" id="addpg">+</button>
                 <button onclick="removeLastChild('pgs'); pgidx = pgidx-1;" id="rempg" disabled>-</button>
             </div>
-            <br/> <br/>
-            <h3>Encounters:</h3>
-            <div id="encs">                
-                <input type=text class="encs" name="enc0"/>
+            <br/>
+            <h3>Curve:</h3>
+            <select id="curve" onchange="if($('#curve').val()==''){$('#nenc').hide(); $('#encs').show(); }else{$('#nenc').show();$('#encs').hide();} ">
+                <option value=""></option>
+                <option value="standard">Standard</option>
+                <option value="challenging">Challenging</option>
+                <option value="impossible">Impossible</option>
+            </select>
+            </br>     
+            <div id="nenc" hidden>
+                <h3>Number of Encounters:</h3>         
+                <input id= "numEncounters" type="number"/>
+                </br>
+            </div>
+            <div id="encs" >
+                <h3>Encounters:</h3>                
+                <input type="text" class="encs" name="enc0"/>
                 <br/>
                 <button onclick="appendelement('encs',encidx); encidx = encidx+1;" id="addenc">+</button>
                 <button onclick="removeLastChild('encs'); encidx = encidx-1;" id="remenc" disabled>-</button>
             </div>
-            <br/> <br/>
+            <br/>
             <button onclick="send()">Generate!</button>
         </div>
         <div id="loading" hidden>
@@ -105,6 +124,22 @@
         </div>
         <div id="result" hidden>
             
+        </div>
+        <div id="error" hidden>
+            <table>
+                <tr><td><p>ERROR: </p></td><td><p id="errcode"></p></td></tr>
+                <tr><td><p id='errdetails'></p></td></tr>
+            </table>
+            <button style="width: 100%;border:none;  text-align: left;background-color: #eee; " onclick="this.classList.toggle('active'); var panel = this.nextElementSibling;  
+                if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+                } else {
+                panel.style.display = 'block';
+                }">Details (click to expand)</button>
+            <div style="display: none;">
+                <p id='errmessage'></p>
+            </div>
+                   
         </div>
     </body>
 </html>

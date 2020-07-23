@@ -228,7 +228,7 @@ function getLootDetails(item){
       //console.error(url);
       var data = [];
       var chance = roll("1d100")
-      if(chance <35)
+      if(chance <50)
         data.push(response.data);
       resolve(data);
     }, function(error){
