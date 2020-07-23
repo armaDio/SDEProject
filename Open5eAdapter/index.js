@@ -28,8 +28,6 @@ tmplines.forEach(function(line){
 });
 
 app.get("/monsters", function (req, res) {
-  console.log(req.body);
-  console.log(req);
   var cr = req.query.cr;
   if(validateCr(cr)) {
     fetchMonsters(cr).then(function(monsters){
@@ -52,8 +50,7 @@ app.get("/monsters", function (req, res) {
             wisdom: monster.wisdom,
             charisma: monster.charisma
           },
-          challenge_rating: monster.challenge_rating,
-          exp: expTable[monster.challenge_rating]
+          challenge_rating: monster.challenge_rating
         }
         monsterList.push(newMonster);
       });

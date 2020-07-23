@@ -110,15 +110,24 @@ app.get("/items", function (req, res) {
     });
   } else {
     console.log(path);
-    fetchItem(path).then(function(response){
+    if((Math.floor(Math.random()*Math.floor(100))+1)<50){
       res.statusCode = 200;
       res.json({
         results: response.results
       });
-    }, function(error){
-      res.statusCode = 500;
-      res.json({status: 500, Description: "Internal Error", Details: error});
-    });
+    }else{
+      fetchItem(path).then(function(response){
+        console.log("RESPONSE***************************************");
+        console.log(response.results);
+        res.statusCode = 200;
+        res.json({
+          results: response.results
+        });
+      }, function(error){
+        res.statusCode = 500;
+        res.json({status: 500, Description: "Internal Error", Details: error});
+      });
+    }
   }
 });
 

@@ -20,8 +20,8 @@ app.use(//function(req, res, next) {
 /*}*/);
 
 app.get("/items", function (req, res) {
-  console.log(req.body);
-  console.log(req);
+  //console.log(req.body);
+  //console.log(req);
   var path = req.query.path;
   if(path == undefined) {
     fetchAllItems().then(function(response){
@@ -37,6 +37,10 @@ app.get("/items", function (req, res) {
     });
   } else {
     fetchItem(path).then(function(response){
+      console.log("response json: -------------------------------");
+      console.log({
+        results: marshal(response)
+      });
       res.statusCode = 200;
       res.json({
         results: marshal(response)
@@ -71,7 +75,7 @@ function fetchItem(path) {
 }
 
 function marshal(rawitem){
-    var newitem = new JSON();
+    var newitem = {};
     newitem.name = rawitem.name;
     newitem.weight = rawitem.weight;
     newitem.cost = rawitem.cost;
@@ -105,5 +109,5 @@ function marshal(rawitem){
           break;
 
     }
-
+    return newitem;
 }

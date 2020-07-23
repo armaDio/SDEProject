@@ -112,6 +112,8 @@ app.post("/rewards", function (req, res) {
         
         //getLootReward(monster.challenge_rating);
         var lootpromise = getLootDetails(list.results[randIdx].url).then(function(item){
+          //console.log("@@@@@@@");
+          //console.log(item);
           rtnMonster.LootReward = {money: getLootReward(monster.challenge_rating), items : item.results};
           rtnMonsters.push(rtnMonster);
           //console.error(rtnMonster);
@@ -121,7 +123,7 @@ app.post("/rewards", function (req, res) {
       Promise.all(Loot_fetches).then(function(responseArray){
         var totalXP = 0;
           rtnMonsters.forEach(element => {
-            console.log(element.XPreward);
+            //console.log(element.XPreward);
             totalXP = totalXP+element.XPreward;
           });
           console.warn(totalXP);
@@ -224,13 +226,9 @@ function getLootDetails(item){
   return new Promise((resolve, reject) => {
     var url = "http://localhost:3008/items?path="+item;
     axios.get(url).then(function(response){
-      //console.error(response.data);
+      //console.error(response);
       //console.error(url);
-      var data = [];
-      var chance = roll("1d100")
-      if(chance <50)
-        data.push(response.data);
-      resolve(data);
+      resolve(response.data);
     }, function(error){
       reject(error);
     });

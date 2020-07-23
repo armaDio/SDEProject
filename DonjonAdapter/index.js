@@ -19,8 +19,6 @@ app.use(//function(req, res, next) {
 /*}*/);
 
 app.get("/names", function (req, res) {
-  console.log(req.body);
-  console.log(req);
   var count = req.query.count;
   if(validateCount(count)) {
     count = parseInt(count);
