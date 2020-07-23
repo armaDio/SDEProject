@@ -113,7 +113,7 @@ app.get("/items", function (req, res) {
     if((Math.floor(Math.random()*Math.floor(100))+1)<50){
       res.statusCode = 200;
       res.json({
-        results: response.results
+        results: {}
       });
     }else{
       fetchItem(path).then(function(response){
