@@ -1,0 +1,313 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "Swagger descriptor for the Adventure Generator service part of the DnD API.",
+    "version" : "1.0.0",
+    "title" : "Adventure Generator API",
+    "contact" : {
+      "email" : "marco.merlin@studenti.unitn.it"
+    },
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host" : "localhost:3000",
+  "basePath" : "/",
+  "tags" : [ {
+    "name" : "adventure",
+    "description" : "Generate adventures"
+  } ],
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/adventure" : {
+      "post" : {
+        "tags" : [ "adventure" ],
+        "summary" : "generates a new adventure",
+        "description" : "Generates a new adventure based on given parameters. Accepts either an array of difficulties or a curve keyword\n",
+        "operationId" : "advGen",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "generationParams",
+          "description" : "The generation parameters which will guide the generation process.\nNote that the encounters and curve parameters are mutually exclusive and\nif both are present only curve will be considered.\nWhen the curve parameter is present the numEncounter parameter must be\npresent as well. The players array is always required.\nPlayers must only contain integers between 1 and 20 included.\nEncounters must only contain strings among easy, medium, hard and deadly.\nCurve must be a string among standard, challenging and impossible.\nNumEncounters must be an integer between 1 and 15 included.\n",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/AdventureGenReq"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "description" : "the generated adventure",
+            "schema" : {
+              "$ref" : "#/definitions/AdventureGenRes"
+            }
+          },
+          "400" : {
+            "description" : "bad input parameter",
+            "schema" : {
+              "$ref" : "#/definitions/AdventureGenErr"
+            }
+          },
+          "500" : {
+            "description" : "internal error",
+            "schema" : {
+              "$ref" : "#/definitions/AdventureGenErr"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "AdventureGenReq" : {
+      "type" : "object",
+      "properties" : {
+        "players" : {
+          "type" : "array",
+          "items" : {
+            "type" : "integer"
+          }
+        },
+        "encounters" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "curve" : {
+          "type" : "string"
+        },
+        "numEncounters" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "AdventureGenRes" : {
+      "type" : "object",
+      "properties" : {
+        "reqEncounters" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "genEncounters" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/AdventureGenRes_genEncounters"
+          }
+        }
+      }
+    },
+    "AdventureGenErr" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "integer"
+        },
+        "description" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string"
+        }
+      }
+    },
+    "AdventureGenRes_speed" : {
+      "type" : "object",
+      "properties" : {
+        "walk" : {
+          "type" : "integer"
+        },
+        "fly" : {
+          "type" : "integer"
+        },
+        "swim" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "AdventureGenRes_stats" : {
+      "type" : "object",
+      "properties" : {
+        "strength" : {
+          "type" : "integer"
+        },
+        "dexterity" : {
+          "type" : "integer"
+        },
+        "constitution" : {
+          "type" : "integer"
+        },
+        "intelligence" : {
+          "type" : "integer"
+        },
+        "wisdom" : {
+          "type" : "integer"
+        },
+        "carisma" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "AdventureGenRes_monsters" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "size" : {
+          "type" : "string"
+        },
+        "type" : {
+          "type" : "string"
+        },
+        "alignment" : {
+          "type" : "string"
+        },
+        "armor_class" : {
+          "type" : "integer"
+        },
+        "hit_points" : {
+          "type" : "integer"
+        },
+        "hit_dice" : {
+          "type" : "string"
+        },
+        "speed" : {
+          "$ref" : "#/definitions/AdventureGenRes_speed"
+        },
+        "stats" : {
+          "$ref" : "#/definitions/AdventureGenRes_stats"
+        },
+        "challenge_rating" : {
+          "type" : "string"
+        }
+      }
+    },
+    "AdventureGenRes_LootReward_money" : {
+      "type" : "object",
+      "properties" : {
+        "CP" : {
+          "type" : "integer"
+        },
+        "SP" : {
+          "type" : "integer"
+        },
+        "EP" : {
+          "type" : "integer"
+        },
+        "GP" : {
+          "type" : "integer"
+        },
+        "PP" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "AdventureGenRes_LootReward_items_cost" : {
+      "type" : "object",
+      "properties" : {
+        "quantity" : {
+          "type" : "integer"
+        },
+        "unit" : {
+          "type" : "string"
+        }
+      }
+    },
+    "AdventureGenRes_LootReward_items" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "weight" : {
+          "type" : "integer"
+        },
+        "cost" : {
+          "$ref" : "#/definitions/AdventureGenRes_LootReward_items_cost"
+        },
+        "equipment_category" : {
+          "type" : "string"
+        },
+        "desc" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "gear_category" : {
+          "type" : "string"
+        }
+      }
+    },
+    "AdventureGenRes_LootReward" : {
+      "type" : "object",
+      "properties" : {
+        "money" : {
+          "$ref" : "#/definitions/AdventureGenRes_LootReward_money"
+        },
+        "items" : {
+          "$ref" : "#/definitions/AdventureGenRes_LootReward_items"
+        }
+      }
+    },
+    "AdventureGenRes_rewards" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "challenge_rating" : {
+          "type" : "string"
+        },
+        "XPreward" : {
+          "type" : "integer"
+        },
+        "LootReward" : {
+          "$ref" : "#/definitions/AdventureGenRes_LootReward"
+        }
+      }
+    },
+    "AdventureGenRes_genEncounters" : {
+      "type" : "object",
+      "properties" : {
+        "encIndex" : {
+          "type" : "integer"
+        },
+        "difficulty" : {
+          "type" : "string"
+        },
+        "initPlayers" : {
+          "type" : "array",
+          "items" : {
+            "type" : "integer"
+          }
+        },
+        "monsters" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/AdventureGenRes_monsters"
+          }
+        },
+        "encounterXP" : {
+          "type" : "integer"
+        },
+        "rewards" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/AdventureGenRes_rewards"
+          }
+        },
+        "newPlayers" : {
+          "type" : "array",
+          "items" : {
+            "type" : "integer"
+          }
+        }
+      }
+    }
+  }
+}

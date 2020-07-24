@@ -224,7 +224,7 @@ function getLootList(){
 
 function getLootDetails(item){
   return new Promise((resolve, reject) => {
-    var url = "http://localhost:3008/items?path="+item;
+    var url = "http://localhost:3008/itemDetails?path="+item;
     axios.get(url).then(function(response){
       //console.error(response);
       //console.error(url);

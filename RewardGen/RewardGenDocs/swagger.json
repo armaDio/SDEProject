@@ -1,0 +1,260 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "Swagger descriptor for the Reward Generator service part of the DnD API.",
+    "version" : "1.0.0",
+    "title" : "Reward Generator API",
+    "contact" : {
+      "email" : "marco.merlin@studenti.unitn.it"
+    },
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host" : "localhost:3002",
+  "basePath" : "/",
+  "tags" : [ {
+    "name" : "reward",
+    "description" : "Generate rewards"
+  } ],
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/rewards" : {
+      "post" : {
+        "tags" : [ "reward" ],
+        "summary" : "generates a new reward",
+        "description" : "Generates a new reward based on given parameters.\n",
+        "operationId" : "rewGen",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "generationParams",
+          "description" : "The generation parameters which will guide the generation process.\nThe monsters array is required.\n",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/RewardGenReq"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "description" : "the generated encounter",
+            "schema" : {
+              "$ref" : "#/definitions/RewardGenRes"
+            }
+          },
+          "400" : {
+            "description" : "bad input parameter",
+            "schema" : {
+              "$ref" : "#/definitions/RewardGenErr"
+            }
+          },
+          "500" : {
+            "description" : "internal error",
+            "schema" : {
+              "$ref" : "#/definitions/RewardGenErr"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "RewardGenReq" : {
+      "type" : "object",
+      "properties" : {
+        "monsters" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/RewardGenReq_monsters"
+          }
+        }
+      }
+    },
+    "RewardGenRes" : {
+      "type" : "object",
+      "properties" : {
+        "totalXP" : {
+          "type" : "integer"
+        },
+        "rewards" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/RewardGenRes_rewards"
+          }
+        }
+      }
+    },
+    "RewardGenErr" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "integer"
+        },
+        "description" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string"
+        }
+      }
+    },
+    "RewardGenReq_speed" : {
+      "type" : "object",
+      "properties" : {
+        "walk" : {
+          "type" : "integer"
+        },
+        "fly" : {
+          "type" : "integer"
+        },
+        "swim" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "RewardGenReq_stats" : {
+      "type" : "object",
+      "properties" : {
+        "strength" : {
+          "type" : "integer"
+        },
+        "dexterity" : {
+          "type" : "integer"
+        },
+        "constitution" : {
+          "type" : "integer"
+        },
+        "intelligence" : {
+          "type" : "integer"
+        },
+        "wisdom" : {
+          "type" : "integer"
+        },
+        "carisma" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "RewardGenReq_monsters" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "size" : {
+          "type" : "string"
+        },
+        "type" : {
+          "type" : "string"
+        },
+        "alignment" : {
+          "type" : "string"
+        },
+        "armor_class" : {
+          "type" : "integer"
+        },
+        "hit_points" : {
+          "type" : "integer"
+        },
+        "hit_dice" : {
+          "type" : "string"
+        },
+        "speed" : {
+          "$ref" : "#/definitions/RewardGenReq_speed"
+        },
+        "stats" : {
+          "$ref" : "#/definitions/RewardGenReq_stats"
+        },
+        "challenge_rating" : {
+          "type" : "string"
+        }
+      }
+    },
+    "RewardGenRes_LootReward_money" : {
+      "type" : "object",
+      "properties" : {
+        "CP" : {
+          "type" : "integer"
+        },
+        "SP" : {
+          "type" : "integer"
+        },
+        "EP" : {
+          "type" : "integer"
+        },
+        "GP" : {
+          "type" : "integer"
+        },
+        "PP" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "RewardGenRes_LootReward_items_cost" : {
+      "type" : "object",
+      "properties" : {
+        "quantity" : {
+          "type" : "integer"
+        },
+        "unit" : {
+          "type" : "string"
+        }
+      }
+    },
+    "RewardGenRes_LootReward_items" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "weight" : {
+          "type" : "integer"
+        },
+        "cost" : {
+          "$ref" : "#/definitions/RewardGenRes_LootReward_items_cost"
+        },
+        "equipment_category" : {
+          "type" : "string"
+        },
+        "desc" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "gear_category" : {
+          "type" : "string"
+        }
+      }
+    },
+    "RewardGenRes_LootReward" : {
+      "type" : "object",
+      "properties" : {
+        "money" : {
+          "$ref" : "#/definitions/RewardGenRes_LootReward_money"
+        },
+        "items" : {
+          "$ref" : "#/definitions/RewardGenRes_LootReward_items"
+        }
+      }
+    },
+    "RewardGenRes_rewards" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "challenge_rating" : {
+          "type" : "string"
+        },
+        "XPreward" : {
+          "type" : "integer"
+        },
+        "LootReward" : {
+          "$ref" : "#/definitions/RewardGenRes_LootReward"
+        }
+      }
+    }
+  }
+}

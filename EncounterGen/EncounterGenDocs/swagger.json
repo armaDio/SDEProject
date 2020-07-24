@@ -1,0 +1,188 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "Swagger descriptor for the Encounter Generator service part of the DnD API.",
+    "version" : "1.0.0",
+    "title" : "Encounter Generator API",
+    "contact" : {
+      "email" : "marco.merlin@studenti.unitn.it"
+    },
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host" : "localhost:3002",
+  "basePath" : "/",
+  "tags" : [ {
+    "name" : "encounter",
+    "description" : "Generate encounters"
+  } ],
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/encounter" : {
+      "post" : {
+        "tags" : [ "encounter" ],
+        "summary" : "generates a new encounter",
+        "description" : "Generates a new encounter based on given parameters.\n",
+        "operationId" : "encGen",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "generationParams",
+          "description" : "The generation parameters which will guide the generation process.\nBoth players and difficulty parameters are required\nPlayers must only contain integers between 1 and 20 included.\nDifficulty must be a string among easy, medium, hard and deadly.\n",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/EncounterGenReq"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "description" : "the generated encounter",
+            "schema" : {
+              "$ref" : "#/definitions/EncounterGenRes"
+            }
+          },
+          "400" : {
+            "description" : "bad input parameter",
+            "schema" : {
+              "$ref" : "#/definitions/EncounterGenErr"
+            }
+          },
+          "500" : {
+            "description" : "internal error",
+            "schema" : {
+              "$ref" : "#/definitions/EncounterGenErr"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "EncounterGenReq" : {
+      "type" : "object",
+      "properties" : {
+        "players" : {
+          "type" : "array",
+          "items" : {
+            "type" : "integer"
+          }
+        },
+        "difficulty" : {
+          "type" : "string"
+        }
+      }
+    },
+    "EncounterGenRes" : {
+      "type" : "object",
+      "properties" : {
+        "difficulty" : {
+          "type" : "string"
+        },
+        "playerCount" : {
+          "type" : "integer"
+        },
+        "avgPartyLevel" : {
+          "type" : "integer"
+        },
+        "monstersCRList" : {
+          "type" : "object",
+          "properties" : { }
+        },
+        "monsters" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/EncounterGenRes_monsters"
+          }
+        }
+      }
+    },
+    "EncounterGenErr" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "integer"
+        },
+        "description" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string"
+        }
+      }
+    },
+    "EncounterGenRes_speed" : {
+      "type" : "object",
+      "properties" : {
+        "walk" : {
+          "type" : "integer"
+        },
+        "fly" : {
+          "type" : "integer"
+        },
+        "swim" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "EncounterGenRes_stats" : {
+      "type" : "object",
+      "properties" : {
+        "strength" : {
+          "type" : "integer"
+        },
+        "dexterity" : {
+          "type" : "integer"
+        },
+        "constitution" : {
+          "type" : "integer"
+        },
+        "intelligence" : {
+          "type" : "integer"
+        },
+        "wisdom" : {
+          "type" : "integer"
+        },
+        "carisma" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "EncounterGenRes_monsters" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "size" : {
+          "type" : "string"
+        },
+        "type" : {
+          "type" : "string"
+        },
+        "alignment" : {
+          "type" : "string"
+        },
+        "armor_class" : {
+          "type" : "integer"
+        },
+        "hit_points" : {
+          "type" : "integer"
+        },
+        "hit_dice" : {
+          "type" : "string"
+        },
+        "speed" : {
+          "$ref" : "#/definitions/EncounterGenRes_speed"
+        },
+        "stats" : {
+          "$ref" : "#/definitions/EncounterGenRes_stats"
+        },
+        "challenge_rating" : {
+          "type" : "string"
+        }
+      }
+    }
+  }
+}

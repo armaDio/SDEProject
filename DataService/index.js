@@ -95,20 +95,24 @@ app.get("/names", function (req, res) {
 app.get("/items", function (req, res) {
   //console.log(req.body);
   //console.log(req);
+	fetchAllItems().then(function(response){
+	  var itemList = response.results;
+	  res.statusCode = 200;
+	  res.json({
+		count: response.count,
+		results: itemList
+	  });
+	}, function(error){
+	  res.statusCode = 500;
+	  res.json({status: 500, Description: "Internal Error", Details: error});
+	});
+});
+
+app.get("/itemDetails", function (req, res) {
+  //console.log(req.body);
+  //console.log(req);
   var path = req.query.path;
-  if(path == undefined) {
-    fetchAllItems().then(function(response){
-      var itemList = response.results;
-      res.statusCode = 200;
-      res.json({
-        count: response.count,
-        results: itemList
-      });
-    }, function(error){
-      res.statusCode = 500;
-      res.json({status: 500, Description: "Internal Error", Details: error});
-    });
-  } else {
+  if(path != undefined) {
     console.log(path);
     if((Math.floor(Math.random()*Math.floor(100))+1)<50){
       res.statusCode = 200;
@@ -128,6 +132,9 @@ app.get("/items", function (req, res) {
         res.json({status: 500, Description: "Internal Error", Details: error});
       });
     }
+  } else {
+    res.statusCode = 400;
+    res.json({status: 400, Description: "Bad Request", Details: "Item path expected"});
   }
 });
 
