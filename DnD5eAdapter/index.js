@@ -22,8 +22,6 @@ app.use(//function(req, res, next) {
 app.get("/items", function (req, res) {
   //console.log(req.body);
   //console.log(req);
-  var path = req.query.path;
-  if(path == undefined) {
     fetchAllItems().then(function(response){
       var itemList = response.results;
       res.statusCode = 200;
@@ -35,7 +33,13 @@ app.get("/items", function (req, res) {
       res.statusCode = 500;
       res.json({status: 500, Description: "Internal Error", Details: error});
     });
-  } else {
+});
+
+app.get("/itemDetails", function (req, res) {
+  //console.log(req.body);
+  //console.log(req);
+  var path = req.query.path;
+  if(path != undefined) {
     fetchItem(path).then(function(response){
       console.log("response json: -------------------------------");
       console.log({
@@ -49,6 +53,9 @@ app.get("/items", function (req, res) {
       res.statusCode = 500;
       res.json({status: 500, Description: "Internal Error", Details: error});
     });
+  } else {
+    res.statusCode = 400;
+    res.json({status: 400, Description: "Bad Request", Details: "Item path expected"});
   }
 });
 

@@ -207,7 +207,7 @@ function fetchAllItems() {
 
 function fetchItem(path) {
   return new Promise((resolve, reject) => {
-    var url = "http://localhost:3012/items?path="+path;
+    var url = "http://localhost:3012/itemDetails?path="+path;
     axios.get(url).then(function(response){
       resolve(response.data);
     }, function(error){

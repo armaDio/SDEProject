@@ -1,0 +1,197 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "Swagger descriptor for the DnD5e adapter service part of the DnD API.",
+    "version" : "1.0.0",
+    "title" : "DnD5e adapter service API",
+    "contact" : {
+      "email" : "marco.merlin@studenti.unitn.it"
+    },
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host" : "localhost:3012",
+  "basePath" : "/",
+  "tags" : [ {
+    "name" : "items",
+    "description" : "Retreive items"
+  } ],
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/items" : {
+      "get" : {
+        "tags" : [ "items" ],
+        "summary" : "retrieves all available items",
+        "description" : "Retrieves all existing items\n",
+        "operationId" : "itemsData",
+        "produces" : [ "application/json" ],
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "the items",
+            "schema" : {
+              "$ref" : "#/definitions/DnD5eItemsRes"
+            }
+          },
+          "500" : {
+            "description" : "internal error",
+            "schema" : {
+              "$ref" : "#/definitions/DnD5eErr"
+            }
+          }
+        }
+      }
+    },
+    "/itemDetails" : {
+      "get" : {
+        "tags" : [ "items" ],
+        "summary" : "retrieves details about one item",
+        "description" : "retrieves details about one item\n",
+        "operationId" : "itemDetailsData",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "path",
+          "in" : "query",
+          "description" : "The path of the item we want the details of.\n",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the item details",
+            "schema" : {
+              "$ref" : "#/definitions/DnD5eItemDetailsRes"
+            }
+          },
+          "400" : {
+            "description" : "bad input parameter",
+            "schema" : {
+              "$ref" : "#/definitions/DnD5eErr"
+            }
+          },
+          "500" : {
+            "description" : "internal error",
+            "schema" : {
+              "$ref" : "#/definitions/DnD5eErr"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "DnD5eItemsRes" : {
+      "type" : "object",
+      "properties" : {
+        "count" : {
+          "type" : "integer"
+        },
+        "results" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/DnD5eItemsRes_results"
+          }
+        }
+      }
+    },
+    "DnD5eItemDetailsRes" : {
+      "type" : "object",
+      "properties" : {
+        "results" : {
+          "$ref" : "#/definitions/DnD5eItemDetailsRes_results"
+        }
+      }
+    },
+    "DnD5eErr" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "integer"
+        },
+        "description" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string"
+        }
+      }
+    },
+    "DnD5eItemsRes_results" : {
+      "type" : "object",
+      "properties" : {
+        "index" : {
+          "type" : "string"
+        },
+        "name" : {
+          "type" : "string"
+        },
+        "url" : {
+          "type" : "string"
+        }
+      }
+    },
+    "DnD5eItemDetailsRes_results_cost" : {
+      "type" : "object",
+      "properties" : {
+        "quantity" : {
+          "type" : "integer"
+        },
+        "unit" : {
+          "type" : "string"
+        }
+      }
+    },
+    "DnD5eItemDetailsRes_results" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "weight" : {
+          "type" : "integer"
+        },
+        "cost" : {
+          "$ref" : "#/definitions/DnD5eItemDetailsRes_results_cost"
+        },
+        "equipment_category" : {
+          "type" : "string"
+        },
+        "gear_category" : {
+          "type" : "string"
+        },
+        "weapon_category" : {
+          "type" : "string"
+        },
+        "weapon_range" : {
+          "type" : "string"
+        },
+        "armor_category" : {
+          "type" : "string"
+        },
+        "armor_class" : {
+          "type" : "string"
+        },
+        "tool_category" : {
+          "type" : "string"
+        },
+        "vehicle_category" : {
+          "type" : "string"
+        },
+        "capacity" : {
+          "type" : "string"
+        },
+        "speed" : {
+          "type" : "string"
+        },
+        "desc" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        }
+      }
+    }
+  }
+}

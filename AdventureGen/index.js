@@ -154,7 +154,9 @@ function fetchEncounter(encIndex, players, encounters, tmpRes, tmpExp) {
             var dividedExp = Math.floor(tmpExp/players.length);
             while((dividedExp - playerExpTable[updatedPlayers[index]+1]) >= 0)
             {
+				if(updatedPlayers[index] < 20){
               updatedPlayers[index]++;
+				}
               dividedExp -= playerExpTable[updatedPlayers[index]];
             }
           });

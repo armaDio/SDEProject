@@ -1,0 +1,87 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "Swagger descriptor for the Donjon adapter service part of the DnD API.",
+    "version" : "1.0.0",
+    "title" : "Donjon adapter service API",
+    "contact" : {
+      "email" : "marco.merlin@studenti.unitn.it"
+    },
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host" : "localhost:3011",
+  "basePath" : "/",
+  "tags" : [ {
+    "name" : "names",
+    "description" : "Retreive names"
+  } ],
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/names" : {
+      "get" : {
+        "tags" : [ "names" ],
+        "summary" : "retrieves a list of randomly generated fantasy names",
+        "description" : "retrieves a list of randomly generated fantasy names\n",
+        "operationId" : "namesData",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "count",
+          "in" : "query",
+          "description" : "The number of names we want to generate\n",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the name list",
+            "schema" : {
+              "$ref" : "#/definitions/DonjonNamesRes"
+            }
+          },
+          "400" : {
+            "description" : "bad input parameter",
+            "schema" : {
+              "$ref" : "#/definitions/DonjonErr"
+            }
+          },
+          "500" : {
+            "description" : "internal error",
+            "schema" : {
+              "$ref" : "#/definitions/DonjonErr"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "DonjonNamesRes" : {
+      "type" : "object",
+      "properties" : {
+        "results" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "DonjonErr" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "integer"
+        },
+        "description" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string"
+        }
+      }
+    }
+  }
+}

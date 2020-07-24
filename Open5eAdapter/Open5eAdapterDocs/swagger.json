@@ -1,0 +1,159 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "Swagger descriptor for the Open5e adapter service part of the DnD API.",
+    "version" : "1.0.0",
+    "title" : "Open5e adapter service API",
+    "contact" : {
+      "email" : "marco.merlin@studenti.unitn.it"
+    },
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host" : "localhost:3010",
+  "basePath" : "/",
+  "tags" : [ {
+    "name" : "monsters",
+    "description" : "Retreive monsters by CR"
+  } ],
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/monsters" : {
+      "get" : {
+        "tags" : [ "monsters" ],
+        "summary" : "retrieves all monster for a CR",
+        "description" : "Retrieves all monsters for the CR specified as parameter\n",
+        "operationId" : "monstersData",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "cr",
+          "in" : "query",
+          "description" : "The CR of the monsters we want to retreive\n",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the monster list",
+            "schema" : {
+              "$ref" : "#/definitions/Open5eMonsterRes"
+            }
+          },
+          "400" : {
+            "description" : "bad input parameter",
+            "schema" : {
+              "$ref" : "#/definitions/Open5eErr"
+            }
+          },
+          "500" : {
+            "description" : "internal error",
+            "schema" : {
+              "$ref" : "#/definitions/Open5eErr"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "Open5eMonsterRes" : {
+      "type" : "object",
+      "properties" : {
+        "results" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/Open5eRes_monsters"
+          }
+        }
+      }
+    },
+    "Open5eErr" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "integer"
+        },
+        "description" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string"
+        }
+      }
+    },
+    "Open5eRes_speed" : {
+      "type" : "object",
+      "properties" : {
+        "walk" : {
+          "type" : "integer"
+        },
+        "fly" : {
+          "type" : "integer"
+        },
+        "swim" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "Open5eRes_stats" : {
+      "type" : "object",
+      "properties" : {
+        "strength" : {
+          "type" : "integer"
+        },
+        "dexterity" : {
+          "type" : "integer"
+        },
+        "constitution" : {
+          "type" : "integer"
+        },
+        "intelligence" : {
+          "type" : "integer"
+        },
+        "wisdom" : {
+          "type" : "integer"
+        },
+        "carisma" : {
+          "type" : "integer"
+        }
+      }
+    },
+    "Open5eRes_monsters" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "size" : {
+          "type" : "string"
+        },
+        "type" : {
+          "type" : "string"
+        },
+        "alignment" : {
+          "type" : "string"
+        },
+        "armor_class" : {
+          "type" : "integer"
+        },
+        "hit_points" : {
+          "type" : "integer"
+        },
+        "hit_dice" : {
+          "type" : "string"
+        },
+        "speed" : {
+          "$ref" : "#/definitions/Open5eRes_speed"
+        },
+        "stats" : {
+          "$ref" : "#/definitions/Open5eRes_stats"
+        },
+        "challenge_rating" : {
+          "type" : "string"
+        }
+      }
+    }
+  }
+}
