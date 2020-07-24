@@ -128,7 +128,7 @@ app.post("/rewards", function (req, res) {
           });
           console.warn(totalXP);
           //console.log(rtnMonsters);
-        res.statusCode = 200;
+        res.statusCode = 201;
         res.json({TotalXP: totalXP, rewards: rtnMonsters});
       }, function(error){
         res.statusCode = 500;

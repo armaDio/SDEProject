@@ -61,6 +61,7 @@ app.post("/adventure", function (req, res) {
                 newPlayers: enc.newPlayers
               });
             });
+			res.statusCode = 201;
             res.json({
               reqEncounters: encounters,
               genEncounters: encounterList
@@ -91,6 +92,7 @@ app.post("/adventure", function (req, res) {
                   newPlayers: enc.newPlayers
                 });
               });
+			  res.statusCode = 201;
               res.json({
                 reqEncounters: encounters,
                 genEncounters: encounterList

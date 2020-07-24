@@ -160,6 +160,7 @@ app.post("/encounter", function (req, res) {
               newMonster.name = newName;
               customMonsterList.push(newMonster);
             });
+			res.statusCode = 201;
             res.json({
               difficulty: difficulty,
               playerCount: players.length,
