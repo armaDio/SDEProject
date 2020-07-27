@@ -94,6 +94,7 @@ function marshal(rawitem){
           newitem.weapon_range = rawitem.weapon_range;
           break;
       case "Armor":
+          newitem.name = newitem.name + " Armor";
           newitem.armor_category = rawitem.armor_category;
           newitem.armor_class = rawitem.armor_class.base;
           break;
